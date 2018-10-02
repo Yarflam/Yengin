@@ -1,11 +1,9 @@
 {
   "name": "yengin",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "description": "HTML5/canvas JS Library",
   "main": "yengin.js",
   "scripts": {
-    "preinstall": "npm i gulp -g",
-    "compile": "gulp compile",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -22,10 +20,5 @@
   "bugs": {
     "url": "https://github.com/Yarflam/Yengin/issues"
   },
-  "homepage": "https://github.com/Yarflam/Yengin#readme",
-  "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-rename": "^1.4.0",
-    "gulp-uglify": "^3.0.1"
-  }
+  "homepage": "https://github.com/Yarflam/Yengin#readme"
 }
