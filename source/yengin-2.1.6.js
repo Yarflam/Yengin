@@ -15,7 +15,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     var self = {}, priv = {}, onlyWeb = [],
         _win = (typeof(window)!='undefined'?window:false),
         _module = (typeof(module)!='undefined'?module:false);
-    self.mode = (_win ? (!module ? 'web' : 'nextjs') : 'node.js');
+    self.mode = (_win ? (!_module ? 'web' : 'nextjs') : 'node.js');
     self.version = "2.1.6";
 
     /*
@@ -41,7 +41,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
 
     self.warning = function (msg) {
         console.warn(self.formatStr("Yengin [v.%s] : %s", [self.version, msg]));
-    }, onlyWeb.push('warning');
+    };
 
     /*
     *	Touch Device - detection
@@ -54,6 +54,10 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     /*
     *	Basic methods
     */
+
+    self.first = function (table) {
+        return (table.length ? table[0] : null);
+    };
 
     self.end = function (table) {
         return (table.length ? table[table.length-1] : null);
@@ -127,8 +131,8 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     };
 
     self.getFctName = function (fct) {
-        var raw = fct.toString();
-        return raw.split(self.chr(32))[1];
+        var match = fct.toString().match(new RegExp('function ([^(]+)\\('));
+        return (match != null ? match[1] : '');
     };
 
     /*
