@@ -1,0 +1,10 @@
+# Ignore
+.git
+.eslintrc
+.gitignore
+
+node_modules
+source
+test
+gulpfile.js
+package-lock.json

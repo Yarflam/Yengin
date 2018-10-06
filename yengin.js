@@ -1,20 +1,22 @@
 'use strict';
-var yengin = (function(o){return o((typeof window!=='undefined'?window:false),o.toString());})(function (_win,_source) {
+var yengin = (function(o){return(o(o.toString()));})(function(_source){
     /*
-    *	Yengin v2.1.5
+    *	Yengin v2.1.6
     *	HTML5/Canvas and Components
     *	Library programmed by Yarflam
-    *	Compatible on Firefox, Chrome, Edge, IE
-    *		Can use it with Node.js
+    *	Compatible on Firefox, Chrome, Opéra, Edge, IE.
+    *		Can use it with Node.js and Nextjs.
     *
     *	Creative Commons - BY:NC:SA - 2015-2018
     *
-    *	> Modified on 06/08/2018 - Yarflam
+    *	> Modified on 06/10/2018 - Yarflam
     */
 
-    var self = {}, priv = {}, onlyWeb = [];
-    self.mode = (_win ? 'web' : 'node.js');
-    self.version = "2.1.5";
+    var self = {}, priv = {}, onlyWeb = [],
+        _win = (typeof(window)!='undefined'?window:false),
+        _module = (typeof(module)!='undefined'?module:false);
+    self.mode = (_win ? (!module ? 'web' : 'nextjs') : 'node.js');
+    self.version = "2.1.6";
 
     /*
     *	Add shortcut for Windows Object
@@ -42,7 +44,7 @@ var yengin = (function(o){return o((typeof window!=='undefined'?window:false),o.
     }, onlyWeb.push('warning');
 
     /*
-    *	Touche Device - detection
+    *	Touch Device - detection
     */
 
     self.isTouchDevice = (function () {
@@ -109,7 +111,7 @@ var yengin = (function(o){return o((typeof window!=='undefined'?window:false),o.
                         temp = obj.constructor.toString().match(regex); }
                     obj.constructor.name = (temp != null ? temp[1] : 'Object');
                 }
-                return (obj.constructor.name);
+                return obj.constructor.name;
             }
         } else { return false; }
     };
@@ -580,7 +582,7 @@ var yengin = (function(o){return o((typeof window!=='undefined'?window:false),o.
             obj.isChecked = function () { return (self.isset(obj.checked) ? obj.checked : false); };
             obj.width = function () { return obj.offsetWidth; };
             obj.height = function () { return obj.offsetHeight; };
-            obj.show = function () { return this.attr('style', (this.attr('style')||'').replace(/display: ?none;?/,'')); };
+            obj.show = function () { return this.attr('style', (this.attr('style')||'').replace(/display: ?none;?/i,'')); };
             obj.hide = function () { return this.css('display','none'); };
             obj.eq = function () { return this; };
             /* Events heritage */
@@ -1676,7 +1678,7 @@ var yengin = (function(o){return o((typeof window!=='undefined'?window:false),o.
         /* Component */
         var getAttrib = function (content) {
             var xhtml = new String();
-            for(attrib in content) {
+            for(var attrib in content) {
                 xhtml += self.chr(32);
                 if(String(content[attrib]).length) {
                     xhtml += attrib+"=\""+content[attrib]+"\"";
@@ -2108,19 +2110,36 @@ var yengin = (function(o){return o((typeof window!=='undefined'?window:false),o.
         return (self.isset(obj) ? (obj(),self) : self);
     }, onlyWeb.push('useNodejs');
 
+    /* Placeholder - Node.js */
+    priv.proxy = function () {
+        return new Proxy(self, {
+            get: function (obj, prop) {
+                if(obj[prop]) { return obj[prop]; }
+                else if(typeof(prop) == 'symbol') { return self; }
+                else { return new Function('return(0);'); }
+            }
+        });
+    };
+
     /* Export */
     return (function () {
         if(self.mode == 'node.js') {
             /* Node.js */
             var item;
             while((item=onlyWeb.pop(),item)) { delete self[item]; }
-            return (module.exports = self, self);
+            self = priv.proxy();
+            return (_module.exports = self, self);
+        } else if(self.mode == 'nextjs') {
+            /* Nextjs */
+            var item, obj = self.getObj;
+            for(item in self) { obj[item] = self[item]; }
+            _win.yengin = obj; /* expose */
+            return (_module.exports = obj, obj);
         } else {
             /* Navigator */
             var item, obj = self.getObj;
-            for(item in self) {
-                obj[item] = self[item];
-            } return obj;
+            for(item in self) { obj[item] = self[item]; }
+            return obj;
         }
     })();
 });
