@@ -747,6 +747,28 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
         return nodeList;
     }, onlyWeb.push('toNodeList');
 
+    self.page = function () {
+        var tl = function (mode) {
+            var doc = document;
+            return Math.max(
+                doc.body['scroll'+mode]>>0, doc.documentElement['scroll'+mode]>>0,
+                doc.body['offset'+mode]>>0, doc.documentElement['offset'+mode]>>0,
+                doc.body['client'+mode]>>0, doc.documentElement['client'+mode]>>0
+            );
+        };
+        var wh = function (mode) {
+            return Math.max(
+                _win['client'+mode]>>0, _win['inner'+mode]>>0
+            );
+        };
+        return {
+            top: function () { return tl('Top'); },
+            left: function () { return tl('Left'); },
+            width: function () { return wh('Width'); },
+            height: function () { return wh('Height'); }
+        };
+    }, onlyWeb.push('page');
+
     /*
     *	Loop Manager
     */
