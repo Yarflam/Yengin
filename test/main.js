@@ -40,6 +40,9 @@ if(['web','nextjs'].indexOf(yengin.mode) >= 0) {
     /* yengin.isTouchDevice */
     test[is(yengin.isTouchDevice)?'pass':'errors'].push('isTouchDevice:1');
 
+    /* yengin.getObj */
+    test[document.querySelector('body')==yengin.getObj('body')?'pass':'errors'].push('getObj:1');
+
 }
 
 /*

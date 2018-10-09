@@ -43,6 +43,10 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
         console.warn(self.formatStr("Yengin [v.%s] : %s", [self.version, msg]));
     };
 
+    self.ignore = function (fct) {
+        try { return fct(); } catch (e) { return {}; }
+    };
+
     /*
     *	Touch Device - detection
     */
@@ -106,7 +110,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
         if(self.isset(obj)) {
             if(self.isset(simple) && simple) {
                 return (typeof obj);
-            } else {
+            } else if(obj != null) {
                 if(obj.constructor.name == undefined) {
                     regex = /function ([^(]+)\([^)]*\)[^{]*\{[^}]*\}/;
                     temp = obj.constructor.toString().match(regex);
@@ -117,7 +121,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                 }
                 return obj.constructor.name;
             }
-        } else { return false; }
+        } return false;
     };
 
     self.istype = function (obj, type, simple) {
@@ -131,7 +135,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     };
 
     self.getFctName = function (fct) {
-        var match = fct.toString().match(new RegExp('function ([^(]+)\\('));
+        var match = fct.toString().match(new RegExp('function ([^(\\s]+)[\\s]?\\('));
         return (match != null ? match[1] : '');
     };
 
@@ -381,7 +385,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
         var autoEvent = (self.isset(autoEvent) && !autoEvent ? false : true);
         /* Use an object or select it */
         if(self.istype(selector, 'String')) {
-            var obj = document.querySelectorAll(selector);
+            var obj = self.ignore(function(){return(document.querySelectorAll(selector));});
             obj._selector = selector;
         } else {
             var obj = self.toNodeList(selector);
@@ -584,8 +588,8 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
             obj.exist = function (fct) { return (obj.fct=fct,obj.fct(),obj); };
             obj.noexist = function (fct) { return obj; };
             obj.isChecked = function () { return (self.isset(obj.checked) ? obj.checked : false); };
-            obj.width = function () { return obj.offsetWidth; };
-            obj.height = function () { return obj.offsetHeight; };
+            obj.width = function () { return obj.offsetWidth; }; // -- erreur Edge ? "Error: Argument non valide."
+            obj.height = function () { return obj.offsetHeight; }; // -- erreur Edge ? "Error: Argument non valide."
             obj.show = function () { return this.attr('style', (this.attr('style')||'').replace(/display: ?none;?/i,'')); };
             obj.hide = function () { return this.css('display','none'); };
             obj.eq = function () { return this; };
@@ -733,6 +737,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
 
     self.toNodeList = function (obj) {
         var nodeList;
+        if(!self.isset(obj) || obj == null) { return document.createDocumentFragment(); }
         if(!obj.parentNode) {
             try {
                 var _temp = document.createDocumentFragment();
