@@ -395,31 +395,35 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
         obj.eq = function (id) {
             id = (self.isset(id) ? id : 0);
             if(self.isset(this[id])) {
-                var obj = this[id];
-                obj._legacy = self.shallowCopy(this, {});
+                var origin = this[id];
             } else { return this; }
+            /* Fake Object */
+            var obj = [origin];
+            for(var props in origin) { obj[props] = origin[props]; }
+            obj._yengin = function () { return origin; };
+            obj._legacy = self.shallowCopy(this, {});
             /* Methods */
             obj.css = function (args, value) {
                 if(self.isset(value)) {
-                    this.style[args] = value;
+                    origin.style[args] = value;
                     return this;
                 } else if(self.istype(args, "Object")) {
                     for(var property in args) {
                         this.css(property, args[property]); }
                     return this;
                 } else if(self.istype(args, "String")) {
-                    return this.style[args];
+                    return origin.style[args];
                 }};
             obj.getReal = function (attrib) {
-                var real = getComputedStyle(this, null);
+                var real = getComputedStyle(origin, null);
                 return (self.isset(real[attrib]) ? real[attrib] : false); };
             obj.getClass = function () {
-                if(this.className.length) {
-                    return this.className.split(self.chr(32));
+                if(origin.className.length) {
+                    return origin.className.split(self.chr(32));
                 } else { return new Array(); }};
             obj.setClass = function (args) {
                 if(self.istype(args, "Array")) {
-                    this.className = args.join(self.chr(32)); }
+                    origin.className = args.join(self.chr(32)); }
                 return this; };
             obj.addClass = function (name) {
                 var listClass = this.getClass(),
@@ -439,45 +443,53 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                 return this; };
             obj.val = function (content) {
                 if(self.isset(content)) {
-                    this.value = content;
+                    origin.value = content;
                     return this;
                 } else {
-                    return this.value;
+                    return origin.value;
                 }};
             obj.html = function (content) {
                 if(self.isset(content)) {
-                    this.innerHTML = content;
+                    origin.innerHTML = content;
                     return this;
                 } else {
-                    return this.innerHTML;
+                    return origin.innerHTML;
                 }};
             obj.append = function (content) {
                 if(self.isset(content)) {
-                    this.innerHTML += content;
+                    if(self.istype(content, 'object', true)) {
+                        this.addChild(content);
+                    } else if(self.istype(content, 'string', true)) {
+                        origin.innerHTML += content;
+                    }
                 } return this; };
             obj.addChild = function (content) {
                 if(self.isset(content)) {
-                    this.appendChild(content);
+                    if(self.isset(content._yengin)) {
+                        origin.appendChild(content._yengin());
+                    } else {
+                        origin.appendChild(content);
+                    }
                 } return this; };
             obj.child = function (selector, autoSelect) {
                 var autoSelect = (self.isset(autoSelect) && !autoSelect ? false : true);
                 if(self.isset(selector)) {
-                    var node = self.shallowCopy(this._legacy, this.querySelectorAll(selector));
+                    var node = self.shallowCopy(obj._legacy, origin.querySelectorAll(selector));
                     return (node.length == 1 && autoSelect ? node.eq(0) : node);
                 } else {
-                    return self.shallowCopy(this._legacy, this.childNodes);
+                    return self.shallowCopy(obj._legacy, origin.childNodes);
                 }};
             obj.find = function (selector, autoSelect, autoEvent) {
                 return obj.child(selector, autoSelect, autoEvent); };
             obj.attr = function (attrib, value) {
                 if(self.isset(attrib)) {
                     if(self.isset(value)) {
-                        this.setAttribute(attrib, value);
+                        origin.setAttribute(attrib, value);
                         return this;
-                    } else { return this.getAttribute(attrib); }
+                    } else { return origin.getAttribute(attrib); }
                 } else { return this; }};
             obj.removeAttr = function (attrib) {
-                return (obj.removeAttribute(attrib),this); };
+                return (origin.removeAttribute(attrib),this); };
             obj.data = function (attrib, value) {
                 if(self.isset(attrib)) {
                     if(self.isset(value)) {
@@ -485,7 +497,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                     } else { return this.attr('data-'+attrib); }
                 } else { return this; }};
             obj.parent = function (selector) {
-                var listParent = [], nextParent = this.parentNode;
+                var listParent = [], nextParent = origin.parentNode;
                 while(nextParent !== null) {
                     listParent.push(nextParent);
                     var nextParent = nextParent.parentNode; }
@@ -504,16 +516,16 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                     }}} return self.getObj(listParent[0]);
                 } else { return this; }};
             obj.index = function (group) {
-                var i, siblings = (!self.isset(group) ? this.parentNode.children : self.getObj(group));
+                var i, siblings = (!self.isset(group) ? origin.parentNode.children : self.getObj(group));
                 for(i=0; i < siblings.length; i++) {
-                    if(siblings[i] == this) { return i; }}
+                    if(siblings[i] == origin) { return i; }}
                 return false; };
             obj.next = function (group, ncount) {
                 var index, siblings;
                 if(self.isset(group)) {
                     if(self.istype(group, 'String')) {
                         index = this.index();
-                        siblings = self.getObj(this.parentNode.querySelectorAll(group));
+                        siblings = self.getObj(origin.parentNode.querySelectorAll(group));
                         for(var i=0; i < siblings.length; i++) {
                             if(siblings.eq(i).index() > index) { return siblings.eq(i); }}
                         return this;
@@ -524,14 +536,14 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                     }
                 }
                 index = this.index(group);
-                siblings = self.getObj((!self.isset(group) ? this.parentNode.children : group));
+                siblings = self.getObj((!self.isset(group) ? origin.parentNode.children : group));
                 return ((index+1) < siblings.length ? siblings.eq(index+1) : this); };
             obj.previous = function (group, ncount) {
                 var index, siblings;
                 if(self.isset(group)) {
                     if(self.istype(group, 'String')) {
                         index = this.index();
-                        siblings = self.getObj(this.parentNode.querySelectorAll(group));
+                        siblings = self.getObj(origin.parentNode.querySelectorAll(group));
                         for(var i=0; i < siblings.length; i++) {
                             if(siblings.eq(i).index() < index) { return siblings.eq(i); }}
                         return this;
@@ -542,67 +554,67 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                     }
                 }
                 index = this.index(group);
-                siblings = self.getObj((!self.isset(group) ? this.parentNode.children : group));
+                siblings = self.getObj((!self.isset(group) ? origin.parentNode.children : group));
                 return ((index-1) >= 0 ? siblings.eq(index-1) : this); };
             obj.remove = function () {
-                this.parentNode.removeChild(this); };
+                this.parentNode.removeChild(origin); };
             obj.fullscreen = function (fct) {
-                if(this.requestFullscreen) {
-                    this.requestFullscreen();
+                if(origin.requestFullscreen) {
+                    origin.requestFullscreen();
                     if(self.isset(fct)) { self.addEvent('fullscreenchange', document, function trigger () {
                         if(!document.msFullscreenElement) { self.remEvent('fullscreenchange', document, trigger);fct(); }
                     }, false); }
-                } else if(this.msRequestFullscreen) {
-                    this.msRequestFullscreen();
+                } else if(origin.msRequestFullscreen) {
+                    origin.msRequestFullscreen();
                     if(self.isset(fct)) { self.addEvent('MSFullscreenChange', document, function trigger () {
                         if(!document.msFullscreenElement) { self.remEvent('MSFullscreenChange', document, trigger);fct(); }
                     }, false); }
-                } else if(this.mozRequestFullScreen) {
-                    this.mozRequestFullScreen();
+                } else if(origin.mozRequestFullScreen) {
+                    origin.mozRequestFullScreen();
                     if(self.isset(fct)) { self.addEvent('mozfullscreenchange', document, function trigger () {
                         if(!document.mozFullScreen) { self.remEvent('mozfullscreenchange', document, trigger);fct(); }
                     }, false); }
-                } else if(this.webkitRequestFullScreen) {
-                    this.webkitRequestFullScreen();
+                } else if(origin.webkitRequestFullScreen) {
+                    origin.webkitRequestFullScreen();
                     if(self.isset(fct)) { self.addEvent('webkitfullscreenchange', document, function trigger () {
                         if(!document.webkitIsFullScreen) { self.remEvent('webkitfullscreenchange', document, trigger);fct(); }
                     }, false); }
                 }};
             obj.on = function (evt, fct, useCapture) {
-                return self.addEvent(evt, this, fct, useCapture); };
+                return self.addEvent(evt, origin, fct, useCapture); };
             obj.addEvent = function (evt, fct, useCapture) {
-                return self.addEvent(evt, this, fct, useCapture); };
+                return self.addEvent(evt, origin, fct, useCapture); };
             obj.remEvent = function (evt, fct) {
-                return self.remEvent(evt, this, fct); };
+                return self.remEvent(evt, origin, fct); };
             obj.catchKeys = function (fct, mode) {
-                return self.catchKeys(this, fct, mode); };
+                return self.catchKeys(origin, fct, mode); };
             obj.catchMouse = function (fct) {
-                return self.catchMouse(this, fct); };
+                return self.catchMouse(origin, fct); };
             obj.scrollTo = function (x,y) {
-                if(x !== false) { this.scrollLeft = x; }
-                if(y !== false) { this.scrollTop = y; }
+                if(x !== false) { origin.scrollLeft = x; }
+                if(y !== false) { origin.scrollTop = y; }
                 return this; };
-            obj.getScrollTop = function () { return this.scrollTop; };
-            obj.getScrollLeft = function () { return this.scrollLeft; };
-            obj.getPosition = function () { return { x: this.offsetLeft, y: this.offsetTop }; };
+            obj.getScrollTop = function () { return origin.scrollTop; };
+            obj.getScrollLeft = function () { return origin.scrollLeft; };
+            obj.getPosition = function () { return { x: origin.offsetLeft, y: origin.offsetTop }; };
             obj.exist = function (fct) { return (obj.fct=fct,obj.fct(),obj); };
             obj.noexist = function (fct) { return obj; };
-            obj.isChecked = function () { return (self.isset(obj.checked) ? obj.checked : false); };
-            obj.width = function () { return obj.offsetWidth; }; // -- erreur Edge ? "Error: Argument non valide."
-            obj.height = function () { return obj.offsetHeight; }; // -- erreur Edge ? "Error: Argument non valide."
-            obj.show = function () { return this.attr('style', (this.attr('style')||'').replace(/display: ?none;?/i,'')); };
-            obj.hide = function () { return this.css('display','none'); };
+            obj.isChecked = function () { return (self.isset(origin.checked) ? origin.checked : false); };
+            obj.width = function () { return origin.offsetWidth; }; // -- erreur Edge ? "Error: Argument non valide."
+            obj.height = function () { return origin.offsetHeight; }; // -- erreur Edge ? "Error: Argument non valide."
+            obj.show = function () { return (this.attr('style', (this.attr('style')||'').replace(/display: ?none;?/i,'')), this); };
+            obj.hide = function () { return (this.css('display','none'), this); };
             obj.eq = function () { return this; };
             /* Events heritage */
             if(autoEvent) {
                 var gen = function (attr) {
                     if(!attr.indexOf('on')) {
                         attr = attr.substr(2);
-                        if(['select','scroll','search','submit','focus'].indexOf(attr) < 0) {
+                        // if(['select','scroll','search','submit','focus'].indexOf(attr) < 0) {
                             obj[attr] = function (fct, useCapture) {
                                 obj.addEvent(attr, fct, useCapture);
                             }
-                        }
+                        // }
                     }
                 }; for(var attr in obj) { gen(attr); }
             }

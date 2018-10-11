@@ -41,7 +41,59 @@ if(['web','nextjs'].indexOf(yengin.mode) >= 0) {
     test[is(yengin.isTouchDevice)?'pass':'errors'].push('isTouchDevice:1');
 
     /* yengin.getObj */
-    test[document.querySelector('body')==yengin.getObj('body')?'pass':'errors'].push('getObj:1');
+    test[document.querySelector('body')==yengin.getObj('body')._yengin()?'pass':'errors'].push('getObj:1');
+
+    (tmp = yengin.getObj(document.createElement('div')), document.querySelector('body').appendChild(tmp[0]));
+    test[document.querySelector('body')==tmp[0].parentNode?'pass':'errors'].push('getObj:2');
+
+    tmp.css('color','red');
+    test[tmp[0].style.color=='red'?'pass':'errors'].push('getObj:3');
+
+    tmp.css({ display: 'inline' });
+    test[tmp[0].style.display=='inline'?'pass':'errors'].push('getObj:4');
+
+    tmp.css({ display: 'inline-block' });
+    test[tmp.css('display')=='inline-block'?'pass':'errors'].push('getObj:5');
+
+    (document.querySelector('body').style.width='50px', tmp.css({ display: 'block' }));
+    test[tmp.getReal('width')=='50px'?'pass':'errors'].push('getObj:6');
+
+    test[!tmp.getClass().length?'pass':'errors'].push('getObj:7');
+
+    tmp.addClass('first');
+    test[tmp.getClass().length==1?'pass':'errors'].push('getObj:8');
+
+    tmp.setClass(['first_again','second']);
+    test[tmp.getClass().length==2&&tmp.getClass()[0]=='first_again'?'pass':'errors'].push('getObj:9');
+
+    tmp.addClass('third');
+    test[tmp.getClass().length==3&&tmp.getClass()[2]=='third'?'pass':'errors'].push('getObj:10');
+
+    test[tmp.hasClass('second')?'pass':'errors'].push('getObj:11');
+
+    test[!tmp.hasClass('four')?'pass':'errors'].push('getObj:12');
+
+    tmp.removeClass('first_again');
+    test[tmp.getClass().length==2&&tmp.getClass()[0]=='second'?'pass':'errors'].push('getObj:13');
+
+    (tmp={first: tmp}, tmp.second = yengin.getObj(document.createElement('input')), tmp.first[0].appendChild(tmp.second[0]));
+    test[tmp.second.val('pass')&&tmp.second[0].value=='pass'?'pass':'errors'].push('getObj:14');
+
+    test[tmp.second.val()=='pass'?'pass':'errors'].push('getObj:15');
+
+    (tmp.third=yengin.getObj(document.createElement('div')), tmp.first[0].appendChild(tmp.third[0]));
+    test[tmp.third.html('testing')&&tmp.third[0].innerHTML=='testing'?'pass':'errors'].push('getObj:16');
+
+    test[tmp.third.html()=='testing'?'pass':'errors'].push('getObj:17');
+
+    test[tmp.third.append('_next')&&tmp.third[0].innerHTML=='testing_next'?'pass':'errors'].push('getObj:18');
+
+    (tmp.four=yengin.getObj(document.createElement('input')), tmp.first.append(tmp.four));
+    test[tmp.four[0].parentNode==tmp.first[0]?'pass':'errors'].push('getObj:19');
+
+    test[tmp.third.addChild(tmp.four)&&tmp.four[0].parentNode==tmp.third[0]?'pass':'errors'].push('getObj:20');
+
+    test[tmp.first.addChild(tmp.four[0])&&tmp.four[0].parentNode==tmp.first[0]?'pass':'errors'].push('getObj:21');
 
 }
 
@@ -118,8 +170,9 @@ test[yengin.quickSortArray(tmp.obj,tmp.fct)[0]==3?'pass':'errors'].push('quickSo
 */
 
 console.log([
-    'Success',
+    'Unit testing',
+    '\nSuccess',
     (test.pass.length)+'/'+(test.pass.length+test.errors.length),
-    '(Errors: '+(test.errors.length)+')',
-    (test.errors.length?'\nItems:\n-> '+test.errors.join('\n-> '):'')
+    '(Errors: '+(test.errors.length)+'), report:',
+    (test.errors.length?'\nItems:\n-> '+test.errors.join('\n-> '):'no one')
 ].join(' '));
