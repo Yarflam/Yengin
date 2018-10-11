@@ -387,6 +387,8 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
         if(self.istype(selector, 'String')) {
             var obj = self.ignore(function(){return(document.querySelectorAll(selector));});
             obj._selector = selector;
+        } else if(self.isset(selector._yengin)) {
+            return selector;
         } else {
             var obj = self.toNodeList(selector);
             obj._selector = undefined;
@@ -463,6 +465,9 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                         origin.innerHTML += content;
                     }
                 } return this; };
+            obj.appendChild = function (content) {
+                this.addChild(content);
+            };
             obj.addChild = function (content) {
                 if(self.isset(content)) {
                     if(self.isset(content._yengin)) {
@@ -557,7 +562,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                 siblings = self.getObj((!self.isset(group) ? origin.parentNode.children : group));
                 return ((index-1) >= 0 ? siblings.eq(index-1) : this); };
             obj.remove = function () {
-                this.parentNode.removeChild(origin); };
+                origin.parentNode.removeChild(origin); };
             obj.fullscreen = function (fct) {
                 if(origin.requestFullscreen) {
                     origin.requestFullscreen();
@@ -952,18 +957,22 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     self.ready = function (fct) { return self.addEvent("load", _win, fct); }, onlyWeb.push('ready');
 
     self.addEvent = function (evt, obj, fct, useCapture) {
-        var self = this;
+        var self = this, realObj;
         if(self.istype(obj, "NodeList")) {
             for(var i=0; i < obj.length; i++) {
                 this.addEvent(evt, obj[i], fct, useCapture); }
         } else {
+            /* Is Yengin object */
+            if(self.isset(obj._yengin)) {
+                realObj = obj._yengin();
+            } else { realObj = obj; }
             /* Add event */
-            if(obj.addEventListener) {
-                obj.addEventListener(evt, fct, useCapture);
-            } else if(obj.attachEvent) {
-                obj.attachEvent("on"+evt, fct, useCapture);
+            if(realObj.addEventListener) {
+                realObj.addEventListener(evt, fct, useCapture);
+            } else if(realObj.attachEvent) {
+                realObj.attachEvent("on"+evt, fct, useCapture);
             } else {
-                obj[evt] = fct;
+                realObj[evt] = fct;
             }
         }
         return obj;
@@ -1043,8 +1052,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     }, onlyWeb.push('catchMouse');
 
     self.catchDragMove = function (obj) {
-        var self = this,
-        promise = {
+        var promise = {
             start: new Function(),
             move: new Function(),
             end: new Function(),
@@ -1065,9 +1073,9 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
             self.addEvent('touchend', obj, function () { promise.end(); });
         }
         /* Promise */
-        obj.start = function (fct) { promise['start'] = fct; return obj; };
-        obj.move = function (fct) { promise['move'] = fct; return obj; }
-        obj.end = function (fct) { promise['end'] = fct; return obj; }
+        obj.start = function (fct) { promise['start'] = fct; return this; };
+        obj.move = function (fct) { promise['move'] = fct; return this; };
+        obj.end = function (fct) { promise['end'] = fct; return this; };
         return obj;
     }, onlyWeb.push('catchDragMove');
 
@@ -1173,39 +1181,39 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     */
     self.canvas = function (selector) {
         var obj = this.getObj(selector);
-        obj.ctx = obj.getContext('2d');
+        obj.ctx = obj[0].getContext('2d');
         obj.hashResize = 0;
         obj.factCtx = 0;
         obj.size = function (x, y) {
             this.css('width', x);this.css('height', y);
             return this; };
         obj.autoResize = function (fact) {
-            obj.dpp('auto', 'auto', fact);
+            this.dpp('auto', 'auto', fact);
             self.addEvent('resize', _win, function () {
                 obj.dpp('auto','auto', fact);
                 obj.hashResize = self.getTime();
             }); };
         obj.catchResize = function (fct) {
-            if(obj.hashResize >= self.getTime()-1000) {
-                obj.hashResize = 0;
-                fct(obj.getDpp());
+            if(this.hashResize >= self.getTime()-1000) {
+                this.hashResize = 0;
+                fct(this.getDpp());
             }};
         obj.dpp = function (x,y,fact) {
-            obj.factCtx = fact;
-            var ratio = (this.offsetHeight/this.offsetWidth);
-            x = (x == 'auto' ? this.parentNode.offsetWidth : x);
+            this.factCtx = fact;
+            var ratio = (this[0].offsetHeight/this[0].offsetWidth);
+            x = (x == 'auto' ? this[0].parentNode.offsetWidth : x);
             y = (y == 'auto' ? x*ratio : y);
             if(self.isset(fact)) {
-                this.width = x*fact;this.height = y*fact;
-            } else { this.width = x;this.height = y; }
+                this[0].width = x*fact;this[0].height = y*fact;
+            } else { this[0].width = x;this[0].height = y; }
             return this; };
         obj.getDpp = function () {
-            return {'x': this.width, 'y': this.height}; };
+            return {'x': this[0].width, 'y': this[0].height}; };
         obj.getURI = function () {
-            return this.toDataURL("image/png"); };
+            return this[0].toDataURL("image/png"); };
         /* Warning: Functions not standardized */
-        obj.modeDraw = function () { obj.ctx.globalCompositeOperation = 'source-over'; };
-        obj.modeClear = function () { obj.ctx.globalCompositeOperation = 'destination-out'; };
+        obj.modeDraw = function () { this.ctx.globalCompositeOperation = 'source-over'; };
+        obj.modeClear = function () { this.ctx.globalCompositeOperation = 'destination-out'; };
         /* End Warning */
         obj.drawCircle = function (args) {
             /*
@@ -1215,32 +1223,32 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
             */
             var startArc = (self.isset(args.startArc) ? args.startArc : 0),
                 endArc = (self.isset(args.endArc) ? args.endArc : 2*Math.PI);
-            obj.ctx.beginPath();
-            obj.ctx.fillStyle = args.color;
-            obj.ctx.lineWidth = args.border;
-            obj.ctx.strokeStyle = args.borderColor;
-            if(self.isset(args.shadow)) { obj.ctx.shadowBlur = args.shadow; }
-            if(self.isset(args.shadowColor)) { obj.ctx.shadowColor = args.shadowColor; }
-            obj.ctx.arc(args.x, args.y, args.radius, startArc, endArc, false);
-            if(args.mode) { obj.ctx.fill(); } else { obj.ctx.stroke(); }
-            obj.ctx.stroke();
-            obj.ctx.closePath();
-            return obj; };
+            this.ctx.beginPath();
+            this.ctx.fillStyle = args.color;
+            this.ctx.lineWidth = args.border;
+            this.ctx.strokeStyle = args.borderColor;
+            if(self.isset(args.shadow)) { this.ctx.shadowBlur = args.shadow; }
+            if(self.isset(args.shadowColor)) { this.ctx.shadowColor = args.shadowColor; }
+            this.ctx.arc(args.x, args.y, args.radius, startArc, endArc, false);
+            if(args.mode) { this.ctx.fill(); } else { this.ctx.stroke(); }
+            this.ctx.stroke();
+            this.ctx.closePath();
+            return this; };
         obj.drawRect = function (args) {
             /*
             *	@args: A (Array), B (Array), color, border, borderColor, mode
             *	@example(A|B): [0,0]
             *	@return: obj
             */
-            obj.ctx.beginPath();
-            obj.ctx.fillStyle = args.color;
-            obj.ctx.lineWidth = args.border;
-            obj.ctx.strokeStyle = args.borderColor;
-            obj.ctx.rect(args.A[0], args.A[1], args.B[0]-args.A[0], args.B[1]-args.A[1]);
-            if(args.mode) { obj.ctx.fill(); } else { obj.ctx.stroke(); }
-            obj.ctx.stroke();
-            obj.ctx.closePath();
-            return obj; };
+            this.ctx.beginPath();
+            this.ctx.fillStyle = args.color;
+            this.ctx.lineWidth = args.border;
+            this.ctx.strokeStyle = args.borderColor;
+            this.ctx.rect(args.A[0], args.A[1], args.B[0]-args.A[0], args.B[1]-args.A[1]);
+            if(args.mode) { this.ctx.fill(); } else { this.ctx.stroke(); }
+            this.ctx.stroke();
+            this.ctx.closePath();
+            return this; };
         obj.drawRoundRect = function (args) {
             /*
             *	@args: A (Array), B (Array), color, border, borderColor, borderRadius, mode
@@ -1248,75 +1256,75 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
             *	@return: obj
             */
             var radius = args.borderRadius;
-            obj.ctx.beginPath();
-            obj.ctx.fillStyle = args.color;
-            obj.ctx.lineWidth = args.border;
-            obj.ctx.strokeStyle = args.borderColor;
-            obj.ctx.moveTo(args.A[0]+radius, args.A[1]);
-            obj.ctx.lineTo(args.B[0]-radius, args.A[1]);
-            obj.ctx.quadraticCurveTo(args.B[0], args.A[1], args.B[0], args.A[1]+radius);
-            obj.ctx.lineTo(args.B[0], args.B[1]-radius);
-            obj.ctx.quadraticCurveTo(args.B[0], args.B[1], args.B[0]-radius, args.B[1]);
-            obj.ctx.lineTo(args.A[0]+radius, args.B[1]);
-            obj.ctx.quadraticCurveTo(args.A[0], args.B[1], args.A[0], args.B[1]-radius);
-            obj.ctx.lineTo(args.A[0], args.A[1]+radius);
-            obj.ctx.quadraticCurveTo(args.A[0], args.A[1], args.A[0]+radius, args.A[1]);
-            if(args.mode) { obj.ctx.fill(); } else { obj.ctx.stroke(); }
-            obj.ctx.stroke();
-            obj.ctx.closePath();
-            return obj; };
+            this.ctx.beginPath();
+            this.ctx.fillStyle = args.color;
+            this.ctx.lineWidth = args.border;
+            this.ctx.strokeStyle = args.borderColor;
+            this.ctx.moveTo(args.A[0]+radius, args.A[1]);
+            this.ctx.lineTo(args.B[0]-radius, args.A[1]);
+            this.ctx.quadraticCurveTo(args.B[0], args.A[1], args.B[0], args.A[1]+radius);
+            this.ctx.lineTo(args.B[0], args.B[1]-radius);
+            this.ctx.quadraticCurveTo(args.B[0], args.B[1], args.B[0]-radius, args.B[1]);
+            this.ctx.lineTo(args.A[0]+radius, args.B[1]);
+            this.ctx.quadraticCurveTo(args.A[0], args.B[1], args.A[0], args.B[1]-radius);
+            this.ctx.lineTo(args.A[0], args.A[1]+radius);
+            this.ctx.quadraticCurveTo(args.A[0], args.A[1], args.A[0]+radius, args.A[1]);
+            if(args.mode) { this.ctx.fill(); } else { this.ctx.stroke(); }
+            this.ctx.stroke();
+            this.ctx.closePath();
+            return this; };
         obj.drawPolygon = function (args) {
             /*
             *	@args: data (Array), color, border, borderColor, mode
             *	@example(data): [[0,0], [5,0], [5,5]]
             *	@return: obj
             */
-            obj.ctx.beginPath();
-            obj.ctx.fillStyle = args.color;
-            obj.ctx.lineWidth = args.border;
-            obj.ctx.strokeStyle = args.borderColor;
-            obj.ctx.moveTo(args.data[0][0], args.data[0][1]);
+            this.ctx.beginPath();
+            this.ctx.fillStyle = args.color;
+            this.ctx.lineWidth = args.border;
+            this.ctx.strokeStyle = args.borderColor;
+            this.ctx.moveTo(args.data[0][0], args.data[0][1]);
             for(var i=1; i < args.data.length; i++) {
-                obj.ctx.lineTo(args.data[i][0], args.data[i][1]); }
-            if(args.mode) { obj.ctx.fill(); } else { obj.ctx.stroke(); }
-            obj.ctx.stroke();
-            obj.ctx.closePath();
-            return obj; };
+                this.ctx.lineTo(args.data[i][0], args.data[i][1]); }
+            if(args.mode) { this.ctx.fill(); } else { this.ctx.stroke(); }
+            this.ctx.stroke();
+            this.ctx.closePath();
+            return this; };
         obj.drawText = function (args) {
             /*
             *	@args: x, y, text, font, color
             *	@example(font): "normal 12pt Calibri"
             *	@return: obj
             */
-            obj.ctx.font = args.font;
-            obj.ctx.fillStyle = args.color;
-            obj.ctx.fillText(args.text, args.x, args.y);
-            return obj; };
+            this.ctx.font = args.font;
+            this.ctx.fillStyle = args.color;
+            this.ctx.fillText(args.text, args.x, args.y);
+            return this; };
         obj.drawPixel = function (args) {
             /*
             *	@args: x, y, color, size
             *	@return: obj
             */
-            obj.ctx.fillStyle = args.color;
-            obj.ctx.fillRect(args.x, args.y, args.size, args.size);
-            return obj; };
+            this.ctx.fillStyle = args.color;
+            this.ctx.fillRect(args.x, args.y, args.size, args.size);
+            return this; };
         obj.drawImage = function (args) {
             /*
             *	@args: src, img(x, y, w, h), cvs(x, y, w, h)
             *	@return: obj
             */
             var img = args.img, cvs = args.cvs;
-            obj.ctx.drawImage(args.src,
+            this.ctx.drawImage(args.src,
                 img.x, img.y, img.w, img.h,
                 cvs.x, cvs.y, cvs.w, cvs.h );
-            return obj; };
+            return this; };
         obj.clear = function (args) {
             if(self.isset(args)) {
-                obj.ctx.clearRect(args.A[0], args.A[1], args.B[0], args.B[1]);
+                this.ctx.clearRect(args.A[0], args.A[1], args.B[0], args.B[1]);
             } else {
-                obj.ctx.clearRect(0, 0, obj.width, obj.height);
+                this.ctx.clearRect(0, 0, this[0].width, this[0].height);
             }
-            return obj; };
+            return this; };
         return obj;
     }, onlyWeb.push('canvas');
 
