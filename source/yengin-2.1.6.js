@@ -2162,12 +2162,16 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     }, onlyWeb.push('useNodejs');
 
     /* Placeholder - Node.js */
-    priv.proxy = function () {
-        return new Proxy(self, {
+    priv.proxy = function (target) {
+        return new Proxy(target, {
             get: function (obj, prop) {
-                if(obj[prop]) { return obj[prop]; }
-                else if(typeof(prop) == 'symbol') { return self; }
-                else { return new Function('return(0);'); }
+                if(obj[prop]) {
+                    return obj[prop];
+                } else if(typeof(prop) == 'symbol') {
+                    return obj;
+                } else {
+                    return priv._proxy;
+                }
             }
         });
     };
@@ -2176,10 +2180,11 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     return (function () {
         if(self.mode == 'node.js') {
             /* Node.js */
-            var item;
+            var item, obj = function(){return(self);};
             while((item=onlyWeb.pop(),item)) { delete self[item]; }
-            self = priv.proxy();
-            return (_module.exports = self, self);
+            for(item in self) { obj[item] = self[item]; }
+            priv._proxy = priv.proxy(obj);
+            return (_module.exports = priv._proxy, priv._proxy);
         } else if(self.mode == 'nextjs') {
             /* Nextjs */
             var item, obj = self.getObj;
