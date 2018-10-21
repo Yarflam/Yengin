@@ -15,7 +15,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     var self = {}, priv = {}, onlyWeb = [],
         _win = (typeof(window)!='undefined'?window:false),
         _module = (typeof(module)!='undefined'?module:false);
-    self.mode = (_win ? (!module ? 'web' : 'nextjs') : 'node.js');
+    self.mode = (_win ? (!_module ? 'web' : 'nextjs') : 'node.js');
     self.version = "2.1.6";
 
     /*
@@ -41,7 +41,11 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
 
     self.warning = function (msg) {
         console.warn(self.formatStr("Yengin [v.%s] : %s", [self.version, msg]));
-    }, onlyWeb.push('warning');
+    };
+
+    self.ignore = function (fct) {
+        try { return fct(); } catch (e) { return {}; }
+    };
 
     /*
     *	Touch Device - detection
@@ -54,6 +58,10 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     /*
     *	Basic methods
     */
+
+    self.first = function (table) {
+        return (table.length ? table[0] : null);
+    };
 
     self.end = function (table) {
         return (table.length ? table[table.length-1] : null);
@@ -102,7 +110,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
         if(self.isset(obj)) {
             if(self.isset(simple) && simple) {
                 return (typeof obj);
-            } else {
+            } else if(obj != null) {
                 if(obj.constructor.name == undefined) {
                     regex = /function ([^(]+)\([^)]*\)[^{]*\{[^}]*\}/;
                     temp = obj.constructor.toString().match(regex);
@@ -113,7 +121,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                 }
                 return obj.constructor.name;
             }
-        } else { return false; }
+        } return false;
     };
 
     self.istype = function (obj, type, simple) {
@@ -127,8 +135,8 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     };
 
     self.getFctName = function (fct) {
-        var raw = fct.toString();
-        return raw.split(self.chr(32))[1];
+        var match = fct.toString().match(new RegExp('function ([^(\\s]+)[\\s]?\\('));
+        return (match != null ? match[1] : '');
     };
 
     /*
@@ -377,8 +385,10 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
         var autoEvent = (self.isset(autoEvent) && !autoEvent ? false : true);
         /* Use an object or select it */
         if(self.istype(selector, 'String')) {
-            var obj = document.querySelectorAll(selector);
+            var obj = self.ignore(function(){return(document.querySelectorAll(selector));});
             obj._selector = selector;
+        } else if(self.isset(selector._yengin)) {
+            return selector;
         } else {
             var obj = self.toNodeList(selector);
             obj._selector = undefined;
@@ -387,31 +397,35 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
         obj.eq = function (id) {
             id = (self.isset(id) ? id : 0);
             if(self.isset(this[id])) {
-                var obj = this[id];
-                obj._legacy = self.shallowCopy(this, {});
+                var origin = this[id];
             } else { return this; }
+            /* Fake Object */
+            var obj = [origin];
+            for(var props in origin) { obj[props] = origin[props]; }
+            obj._yengin = function () { return origin; };
+            obj._legacy = self.shallowCopy(this, {});
             /* Methods */
             obj.css = function (args, value) {
                 if(self.isset(value)) {
-                    this.style[args] = value;
+                    origin.style[args] = value;
                     return this;
                 } else if(self.istype(args, "Object")) {
                     for(var property in args) {
                         this.css(property, args[property]); }
                     return this;
                 } else if(self.istype(args, "String")) {
-                    return this.style[args];
+                    return origin.style[args];
                 }};
             obj.getReal = function (attrib) {
-                var real = getComputedStyle(this, null);
+                var real = getComputedStyle(origin, null);
                 return (self.isset(real[attrib]) ? real[attrib] : false); };
             obj.getClass = function () {
-                if(this.className.length) {
-                    return this.className.split(self.chr(32));
+                if(origin.className.length) {
+                    return origin.className.split(self.chr(32));
                 } else { return new Array(); }};
             obj.setClass = function (args) {
                 if(self.istype(args, "Array")) {
-                    this.className = args.join(self.chr(32)); }
+                    origin.className = args.join(self.chr(32)); }
                 return this; };
             obj.addClass = function (name) {
                 var listClass = this.getClass(),
@@ -431,45 +445,56 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                 return this; };
             obj.val = function (content) {
                 if(self.isset(content)) {
-                    this.value = content;
+                    origin.value = content;
                     return this;
                 } else {
-                    return this.value;
+                    return origin.value;
                 }};
             obj.html = function (content) {
                 if(self.isset(content)) {
-                    this.innerHTML = content;
+                    origin.innerHTML = content;
                     return this;
                 } else {
-                    return this.innerHTML;
+                    return origin.innerHTML;
                 }};
             obj.append = function (content) {
                 if(self.isset(content)) {
-                    this.innerHTML += content;
+                    if(self.istype(content, 'object', true)) {
+                        this.addChild(content);
+                    } else if(self.istype(content, 'string', true)) {
+                        origin.innerHTML += content;
+                    }
                 } return this; };
+            obj.appendChild = function (content) {
+                this.addChild(content);
+            };
             obj.addChild = function (content) {
                 if(self.isset(content)) {
-                    this.appendChild(content);
+                    if(self.isset(content._yengin)) {
+                        origin.appendChild(content._yengin());
+                    } else {
+                        origin.appendChild(content);
+                    }
                 } return this; };
             obj.child = function (selector, autoSelect) {
                 var autoSelect = (self.isset(autoSelect) && !autoSelect ? false : true);
                 if(self.isset(selector)) {
-                    var node = self.shallowCopy(this._legacy, this.querySelectorAll(selector));
+                    var node = self.shallowCopy(obj._legacy, origin.querySelectorAll(selector));
                     return (node.length == 1 && autoSelect ? node.eq(0) : node);
                 } else {
-                    return self.shallowCopy(this._legacy, this.childNodes);
+                    return self.shallowCopy(obj._legacy, origin.childNodes);
                 }};
             obj.find = function (selector, autoSelect, autoEvent) {
                 return obj.child(selector, autoSelect, autoEvent); };
             obj.attr = function (attrib, value) {
                 if(self.isset(attrib)) {
                     if(self.isset(value)) {
-                        this.setAttribute(attrib, value);
+                        origin.setAttribute(attrib, value);
                         return this;
-                    } else { return this.getAttribute(attrib); }
+                    } else { return origin.getAttribute(attrib); }
                 } else { return this; }};
             obj.removeAttr = function (attrib) {
-                return (obj.removeAttribute(attrib),this); };
+                return (origin.removeAttribute(attrib),this); };
             obj.data = function (attrib, value) {
                 if(self.isset(attrib)) {
                     if(self.isset(value)) {
@@ -477,7 +502,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                     } else { return this.attr('data-'+attrib); }
                 } else { return this; }};
             obj.parent = function (selector) {
-                var listParent = [], nextParent = this.parentNode;
+                var listParent = [], nextParent = origin.parentNode;
                 while(nextParent !== null) {
                     listParent.push(nextParent);
                     var nextParent = nextParent.parentNode; }
@@ -496,16 +521,16 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                     }}} return self.getObj(listParent[0]);
                 } else { return this; }};
             obj.index = function (group) {
-                var i, siblings = (!self.isset(group) ? this.parentNode.children : self.getObj(group));
+                var i, siblings = (!self.isset(group) ? origin.parentNode.children : self.getObj(group));
                 for(i=0; i < siblings.length; i++) {
-                    if(siblings[i] == this) { return i; }}
+                    if(siblings[i] == origin) { return i; }}
                 return false; };
             obj.next = function (group, ncount) {
                 var index, siblings;
                 if(self.isset(group)) {
                     if(self.istype(group, 'String')) {
                         index = this.index();
-                        siblings = self.getObj(this.parentNode.querySelectorAll(group));
+                        siblings = self.getObj(origin.parentNode.querySelectorAll(group));
                         for(var i=0; i < siblings.length; i++) {
                             if(siblings.eq(i).index() > index) { return siblings.eq(i); }}
                         return this;
@@ -516,14 +541,14 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                     }
                 }
                 index = this.index(group);
-                siblings = self.getObj((!self.isset(group) ? this.parentNode.children : group));
+                siblings = self.getObj((!self.isset(group) ? origin.parentNode.children : group));
                 return ((index+1) < siblings.length ? siblings.eq(index+1) : this); };
             obj.previous = function (group, ncount) {
                 var index, siblings;
                 if(self.isset(group)) {
                     if(self.istype(group, 'String')) {
                         index = this.index();
-                        siblings = self.getObj(this.parentNode.querySelectorAll(group));
+                        siblings = self.getObj(origin.parentNode.querySelectorAll(group));
                         for(var i=0; i < siblings.length; i++) {
                             if(siblings.eq(i).index() < index) { return siblings.eq(i); }}
                         return this;
@@ -534,67 +559,67 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                     }
                 }
                 index = this.index(group);
-                siblings = self.getObj((!self.isset(group) ? this.parentNode.children : group));
+                siblings = self.getObj((!self.isset(group) ? origin.parentNode.children : group));
                 return ((index-1) >= 0 ? siblings.eq(index-1) : this); };
             obj.remove = function () {
-                this.parentNode.removeChild(this); };
+                origin.parentNode.removeChild(origin); };
             obj.fullscreen = function (fct) {
-                if(this.requestFullscreen) {
-                    this.requestFullscreen();
+                if(origin.requestFullscreen) {
+                    origin.requestFullscreen();
                     if(self.isset(fct)) { self.addEvent('fullscreenchange', document, function trigger () {
                         if(!document.msFullscreenElement) { self.remEvent('fullscreenchange', document, trigger);fct(); }
                     }, false); }
-                } else if(this.msRequestFullscreen) {
-                    this.msRequestFullscreen();
+                } else if(origin.msRequestFullscreen) {
+                    origin.msRequestFullscreen();
                     if(self.isset(fct)) { self.addEvent('MSFullscreenChange', document, function trigger () {
                         if(!document.msFullscreenElement) { self.remEvent('MSFullscreenChange', document, trigger);fct(); }
                     }, false); }
-                } else if(this.mozRequestFullScreen) {
-                    this.mozRequestFullScreen();
+                } else if(origin.mozRequestFullScreen) {
+                    origin.mozRequestFullScreen();
                     if(self.isset(fct)) { self.addEvent('mozfullscreenchange', document, function trigger () {
                         if(!document.mozFullScreen) { self.remEvent('mozfullscreenchange', document, trigger);fct(); }
                     }, false); }
-                } else if(this.webkitRequestFullScreen) {
-                    this.webkitRequestFullScreen();
+                } else if(origin.webkitRequestFullScreen) {
+                    origin.webkitRequestFullScreen();
                     if(self.isset(fct)) { self.addEvent('webkitfullscreenchange', document, function trigger () {
                         if(!document.webkitIsFullScreen) { self.remEvent('webkitfullscreenchange', document, trigger);fct(); }
                     }, false); }
                 }};
             obj.on = function (evt, fct, useCapture) {
-                return self.addEvent(evt, this, fct, useCapture); };
+                return self.addEvent(evt, origin, fct, useCapture); };
             obj.addEvent = function (evt, fct, useCapture) {
-                return self.addEvent(evt, this, fct, useCapture); };
+                return self.addEvent(evt, origin, fct, useCapture); };
             obj.remEvent = function (evt, fct) {
-                return self.remEvent(evt, this, fct); };
+                return self.remEvent(evt, origin, fct); };
             obj.catchKeys = function (fct, mode) {
-                return self.catchKeys(this, fct, mode); };
+                return self.catchKeys(origin, fct, mode); };
             obj.catchMouse = function (fct) {
-                return self.catchMouse(this, fct); };
+                return self.catchMouse(origin, fct); };
             obj.scrollTo = function (x,y) {
-                if(x !== false) { this.scrollLeft = x; }
-                if(y !== false) { this.scrollTop = y; }
+                if(x !== false) { origin.scrollLeft = x; }
+                if(y !== false) { origin.scrollTop = y; }
                 return this; };
-            obj.getScrollTop = function () { return this.scrollTop; };
-            obj.getScrollLeft = function () { return this.scrollLeft; };
-            obj.getPosition = function () { return { x: this.offsetLeft, y: this.offsetTop }; };
+            obj.getScrollTop = function () { return origin.scrollTop; };
+            obj.getScrollLeft = function () { return origin.scrollLeft; };
+            obj.getPosition = function () { return { x: origin.offsetLeft, y: origin.offsetTop }; };
             obj.exist = function (fct) { return (obj.fct=fct,obj.fct(),obj); };
             obj.noexist = function (fct) { return obj; };
-            obj.isChecked = function () { return (self.isset(obj.checked) ? obj.checked : false); };
-            obj.width = function () { return obj.offsetWidth; };
-            obj.height = function () { return obj.offsetHeight; };
-            obj.show = function () { return this.attr('style', (this.attr('style')||'').replace(/display: ?none;?/i,'')); };
-            obj.hide = function () { return this.css('display','none'); };
+            obj.isChecked = function () { return (self.isset(origin.checked) ? origin.checked : false); };
+            obj.width = function () { return origin.offsetWidth; }; // -- erreur Edge ? "Error: Argument non valide."
+            obj.height = function () { return origin.offsetHeight; }; // -- erreur Edge ? "Error: Argument non valide."
+            obj.show = function () { return (this.attr('style', (this.attr('style')||'').replace(/display: ?none;?/i,'')), this); };
+            obj.hide = function () { return (this.css('display','none'), this); };
             obj.eq = function () { return this; };
             /* Events heritage */
             if(autoEvent) {
                 var gen = function (attr) {
                     if(!attr.indexOf('on')) {
                         attr = attr.substr(2);
-                        if(['select','scroll','search','submit','focus'].indexOf(attr) < 0) {
+                        // if(['select','scroll','search','submit','focus'].indexOf(attr) < 0) {
                             obj[attr] = function (fct, useCapture) {
                                 obj.addEvent(attr, fct, useCapture);
                             }
-                        }
+                        // }
                     }
                 }; for(var attr in obj) { gen(attr); }
             }
@@ -729,6 +754,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
 
     self.toNodeList = function (obj) {
         var nodeList;
+        if(!self.isset(obj) || obj == null) { return document.createDocumentFragment(); }
         if(!obj.parentNode) {
             try {
                 var _temp = document.createDocumentFragment();
@@ -742,6 +768,28 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
         }
         return nodeList;
     }, onlyWeb.push('toNodeList');
+
+    self.page = function () {
+        var tl = function (mode) {
+            var doc = document;
+            return Math.max(
+                doc.body['scroll'+mode]>>0, doc.documentElement['scroll'+mode]>>0,
+                doc.body['offset'+mode]>>0, doc.documentElement['offset'+mode]>>0,
+                doc.body['client'+mode]>>0, doc.documentElement['client'+mode]>>0
+            );
+        };
+        var wh = function (mode) {
+            return Math.max(
+                _win['client'+mode]>>0, _win['inner'+mode]>>0
+            );
+        };
+        return {
+            top: function () { return tl('Top'); },
+            left: function () { return tl('Left'); },
+            width: function () { return wh('Width'); },
+            height: function () { return wh('Height'); }
+        };
+    }, onlyWeb.push('page');
 
     /*
     *	Loop Manager
@@ -909,18 +957,22 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     self.ready = function (fct) { return self.addEvent("load", _win, fct); }, onlyWeb.push('ready');
 
     self.addEvent = function (evt, obj, fct, useCapture) {
-        var self = this;
+        var self = this, realObj;
         if(self.istype(obj, "NodeList")) {
             for(var i=0; i < obj.length; i++) {
                 this.addEvent(evt, obj[i], fct, useCapture); }
         } else {
+            /* Is Yengin object */
+            if(self.isset(obj._yengin)) {
+                realObj = obj._yengin();
+            } else { realObj = obj; }
             /* Add event */
-            if(obj.addEventListener) {
-                obj.addEventListener(evt, fct, useCapture);
-            } else if(obj.attachEvent) {
-                obj.attachEvent("on"+evt, fct, useCapture);
+            if(realObj.addEventListener) {
+                realObj.addEventListener(evt, fct, useCapture);
+            } else if(realObj.attachEvent) {
+                realObj.attachEvent("on"+evt, fct, useCapture);
             } else {
-                obj[evt] = fct;
+                realObj[evt] = fct;
             }
         }
         return obj;
@@ -1000,8 +1052,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     }, onlyWeb.push('catchMouse');
 
     self.catchDragMove = function (obj) {
-        var self = this,
-        promise = {
+        var promise = {
             start: new Function(),
             move: new Function(),
             end: new Function(),
@@ -1022,9 +1073,9 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
             self.addEvent('touchend', obj, function () { promise.end(); });
         }
         /* Promise */
-        obj.start = function (fct) { promise['start'] = fct; return obj; };
-        obj.move = function (fct) { promise['move'] = fct; return obj; }
-        obj.end = function (fct) { promise['end'] = fct; return obj; }
+        obj.start = function (fct) { promise['start'] = fct; return this; };
+        obj.move = function (fct) { promise['move'] = fct; return this; };
+        obj.end = function (fct) { promise['end'] = fct; return this; };
         return obj;
     }, onlyWeb.push('catchDragMove');
 
@@ -1130,39 +1181,39 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     */
     self.canvas = function (selector) {
         var obj = this.getObj(selector);
-        obj.ctx = obj.getContext('2d');
+        obj.ctx = obj[0].getContext('2d');
         obj.hashResize = 0;
         obj.factCtx = 0;
         obj.size = function (x, y) {
             this.css('width', x);this.css('height', y);
             return this; };
         obj.autoResize = function (fact) {
-            obj.dpp('auto', 'auto', fact);
+            this.dpp('auto', 'auto', fact);
             self.addEvent('resize', _win, function () {
                 obj.dpp('auto','auto', fact);
                 obj.hashResize = self.getTime();
             }); };
         obj.catchResize = function (fct) {
-            if(obj.hashResize >= self.getTime()-1000) {
-                obj.hashResize = 0;
-                fct(obj.getDpp());
+            if(this.hashResize >= self.getTime()-1000) {
+                this.hashResize = 0;
+                fct(this.getDpp());
             }};
         obj.dpp = function (x,y,fact) {
-            obj.factCtx = fact;
-            var ratio = (this.offsetHeight/this.offsetWidth);
-            x = (x == 'auto' ? this.parentNode.offsetWidth : x);
+            this.factCtx = fact;
+            var ratio = (this[0].offsetHeight/this[0].offsetWidth);
+            x = (x == 'auto' ? this[0].parentNode.offsetWidth : x);
             y = (y == 'auto' ? x*ratio : y);
             if(self.isset(fact)) {
-                this.width = x*fact;this.height = y*fact;
-            } else { this.width = x;this.height = y; }
+                this[0].width = x*fact;this[0].height = y*fact;
+            } else { this[0].width = x;this[0].height = y; }
             return this; };
         obj.getDpp = function () {
-            return {'x': this.width, 'y': this.height}; };
+            return {'x': this[0].width, 'y': this[0].height}; };
         obj.getURI = function () {
-            return this.toDataURL("image/png"); };
+            return this[0].toDataURL("image/png"); };
         /* Warning: Functions not standardized */
-        obj.modeDraw = function () { obj.ctx.globalCompositeOperation = 'source-over'; };
-        obj.modeClear = function () { obj.ctx.globalCompositeOperation = 'destination-out'; };
+        obj.modeDraw = function () { this.ctx.globalCompositeOperation = 'source-over'; };
+        obj.modeClear = function () { this.ctx.globalCompositeOperation = 'destination-out'; };
         /* End Warning */
         obj.drawCircle = function (args) {
             /*
@@ -1172,32 +1223,32 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
             */
             var startArc = (self.isset(args.startArc) ? args.startArc : 0),
                 endArc = (self.isset(args.endArc) ? args.endArc : 2*Math.PI);
-            obj.ctx.beginPath();
-            obj.ctx.fillStyle = args.color;
-            obj.ctx.lineWidth = args.border;
-            obj.ctx.strokeStyle = args.borderColor;
-            if(self.isset(args.shadow)) { obj.ctx.shadowBlur = args.shadow; }
-            if(self.isset(args.shadowColor)) { obj.ctx.shadowColor = args.shadowColor; }
-            obj.ctx.arc(args.x, args.y, args.radius, startArc, endArc, false);
-            if(args.mode) { obj.ctx.fill(); } else { obj.ctx.stroke(); }
-            obj.ctx.stroke();
-            obj.ctx.closePath();
-            return obj; };
+            this.ctx.beginPath();
+            this.ctx.fillStyle = args.color;
+            this.ctx.lineWidth = args.border;
+            this.ctx.strokeStyle = args.borderColor;
+            if(self.isset(args.shadow)) { this.ctx.shadowBlur = args.shadow; }
+            if(self.isset(args.shadowColor)) { this.ctx.shadowColor = args.shadowColor; }
+            this.ctx.arc(args.x, args.y, args.radius, startArc, endArc, false);
+            if(args.mode) { this.ctx.fill(); } else { this.ctx.stroke(); }
+            this.ctx.stroke();
+            this.ctx.closePath();
+            return this; };
         obj.drawRect = function (args) {
             /*
             *	@args: A (Array), B (Array), color, border, borderColor, mode
             *	@example(A|B): [0,0]
             *	@return: obj
             */
-            obj.ctx.beginPath();
-            obj.ctx.fillStyle = args.color;
-            obj.ctx.lineWidth = args.border;
-            obj.ctx.strokeStyle = args.borderColor;
-            obj.ctx.rect(args.A[0], args.A[1], args.B[0]-args.A[0], args.B[1]-args.A[1]);
-            if(args.mode) { obj.ctx.fill(); } else { obj.ctx.stroke(); }
-            obj.ctx.stroke();
-            obj.ctx.closePath();
-            return obj; };
+            this.ctx.beginPath();
+            this.ctx.fillStyle = args.color;
+            this.ctx.lineWidth = args.border;
+            this.ctx.strokeStyle = args.borderColor;
+            this.ctx.rect(args.A[0], args.A[1], args.B[0]-args.A[0], args.B[1]-args.A[1]);
+            if(args.mode) { this.ctx.fill(); } else { this.ctx.stroke(); }
+            this.ctx.stroke();
+            this.ctx.closePath();
+            return this; };
         obj.drawRoundRect = function (args) {
             /*
             *	@args: A (Array), B (Array), color, border, borderColor, borderRadius, mode
@@ -1205,75 +1256,75 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
             *	@return: obj
             */
             var radius = args.borderRadius;
-            obj.ctx.beginPath();
-            obj.ctx.fillStyle = args.color;
-            obj.ctx.lineWidth = args.border;
-            obj.ctx.strokeStyle = args.borderColor;
-            obj.ctx.moveTo(args.A[0]+radius, args.A[1]);
-            obj.ctx.lineTo(args.B[0]-radius, args.A[1]);
-            obj.ctx.quadraticCurveTo(args.B[0], args.A[1], args.B[0], args.A[1]+radius);
-            obj.ctx.lineTo(args.B[0], args.B[1]-radius);
-            obj.ctx.quadraticCurveTo(args.B[0], args.B[1], args.B[0]-radius, args.B[1]);
-            obj.ctx.lineTo(args.A[0]+radius, args.B[1]);
-            obj.ctx.quadraticCurveTo(args.A[0], args.B[1], args.A[0], args.B[1]-radius);
-            obj.ctx.lineTo(args.A[0], args.A[1]+radius);
-            obj.ctx.quadraticCurveTo(args.A[0], args.A[1], args.A[0]+radius, args.A[1]);
-            if(args.mode) { obj.ctx.fill(); } else { obj.ctx.stroke(); }
-            obj.ctx.stroke();
-            obj.ctx.closePath();
-            return obj; };
+            this.ctx.beginPath();
+            this.ctx.fillStyle = args.color;
+            this.ctx.lineWidth = args.border;
+            this.ctx.strokeStyle = args.borderColor;
+            this.ctx.moveTo(args.A[0]+radius, args.A[1]);
+            this.ctx.lineTo(args.B[0]-radius, args.A[1]);
+            this.ctx.quadraticCurveTo(args.B[0], args.A[1], args.B[0], args.A[1]+radius);
+            this.ctx.lineTo(args.B[0], args.B[1]-radius);
+            this.ctx.quadraticCurveTo(args.B[0], args.B[1], args.B[0]-radius, args.B[1]);
+            this.ctx.lineTo(args.A[0]+radius, args.B[1]);
+            this.ctx.quadraticCurveTo(args.A[0], args.B[1], args.A[0], args.B[1]-radius);
+            this.ctx.lineTo(args.A[0], args.A[1]+radius);
+            this.ctx.quadraticCurveTo(args.A[0], args.A[1], args.A[0]+radius, args.A[1]);
+            if(args.mode) { this.ctx.fill(); } else { this.ctx.stroke(); }
+            this.ctx.stroke();
+            this.ctx.closePath();
+            return this; };
         obj.drawPolygon = function (args) {
             /*
             *	@args: data (Array), color, border, borderColor, mode
             *	@example(data): [[0,0], [5,0], [5,5]]
             *	@return: obj
             */
-            obj.ctx.beginPath();
-            obj.ctx.fillStyle = args.color;
-            obj.ctx.lineWidth = args.border;
-            obj.ctx.strokeStyle = args.borderColor;
-            obj.ctx.moveTo(args.data[0][0], args.data[0][1]);
+            this.ctx.beginPath();
+            this.ctx.fillStyle = args.color;
+            this.ctx.lineWidth = args.border;
+            this.ctx.strokeStyle = args.borderColor;
+            this.ctx.moveTo(args.data[0][0], args.data[0][1]);
             for(var i=1; i < args.data.length; i++) {
-                obj.ctx.lineTo(args.data[i][0], args.data[i][1]); }
-            if(args.mode) { obj.ctx.fill(); } else { obj.ctx.stroke(); }
-            obj.ctx.stroke();
-            obj.ctx.closePath();
-            return obj; };
+                this.ctx.lineTo(args.data[i][0], args.data[i][1]); }
+            if(args.mode) { this.ctx.fill(); } else { this.ctx.stroke(); }
+            this.ctx.stroke();
+            this.ctx.closePath();
+            return this; };
         obj.drawText = function (args) {
             /*
             *	@args: x, y, text, font, color
             *	@example(font): "normal 12pt Calibri"
             *	@return: obj
             */
-            obj.ctx.font = args.font;
-            obj.ctx.fillStyle = args.color;
-            obj.ctx.fillText(args.text, args.x, args.y);
-            return obj; };
+            this.ctx.font = args.font;
+            this.ctx.fillStyle = args.color;
+            this.ctx.fillText(args.text, args.x, args.y);
+            return this; };
         obj.drawPixel = function (args) {
             /*
             *	@args: x, y, color, size
             *	@return: obj
             */
-            obj.ctx.fillStyle = args.color;
-            obj.ctx.fillRect(args.x, args.y, args.size, args.size);
-            return obj; };
+            this.ctx.fillStyle = args.color;
+            this.ctx.fillRect(args.x, args.y, args.size, args.size);
+            return this; };
         obj.drawImage = function (args) {
             /*
             *	@args: src, img(x, y, w, h), cvs(x, y, w, h)
             *	@return: obj
             */
             var img = args.img, cvs = args.cvs;
-            obj.ctx.drawImage(args.src,
+            this.ctx.drawImage(args.src,
                 img.x, img.y, img.w, img.h,
                 cvs.x, cvs.y, cvs.w, cvs.h );
-            return obj; };
+            return this; };
         obj.clear = function (args) {
             if(self.isset(args)) {
-                obj.ctx.clearRect(args.A[0], args.A[1], args.B[0], args.B[1]);
+                this.ctx.clearRect(args.A[0], args.A[1], args.B[0], args.B[1]);
             } else {
-                obj.ctx.clearRect(0, 0, obj.width, obj.height);
+                this.ctx.clearRect(0, 0, this[0].width, this[0].height);
             }
-            return obj; };
+            return this; };
         return obj;
     }, onlyWeb.push('canvas');
 
@@ -2111,12 +2162,16 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     }, onlyWeb.push('useNodejs');
 
     /* Placeholder - Node.js */
-    priv.proxy = function () {
-        return new Proxy(self, {
+    priv.proxy = function (target) {
+        return new Proxy(target, {
             get: function (obj, prop) {
-                if(obj[prop]) { return obj[prop]; }
-                else if(typeof(prop) == 'symbol') { return self; }
-                else { return new Function('return(0);'); }
+                if(obj[prop]) {
+                    return obj[prop];
+                } else if(typeof(prop) == 'symbol') {
+                    return obj;
+                } else {
+                    return priv._proxy;
+                }
             }
         });
     };
@@ -2125,10 +2180,11 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     return (function () {
         if(self.mode == 'node.js') {
             /* Node.js */
-            var item;
+            var item, obj = function(){return(self);};
             while((item=onlyWeb.pop(),item)) { delete self[item]; }
-            self = priv.proxy();
-            return (_module.exports = self, self);
+            for(item in self) { obj[item] = self[item]; }
+            priv._proxy = priv.proxy(obj);
+            return (_module.exports = priv._proxy, priv._proxy);
         } else if(self.mode == 'nextjs') {
             /* Nextjs */
             var item, obj = self.getObj;
