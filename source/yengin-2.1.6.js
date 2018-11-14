@@ -401,7 +401,11 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
             } else { return this; }
             /* Fake Object */
             var obj = [origin];
-            for(var props in origin) { obj[props] = origin[props]; }
+            for(var props in origin) {
+                if(!(origin[props] instanceof Element || origin[props] instanceof HTMLDocument)) {
+                    obj[props] = origin[props];
+                }
+            }
             obj._yengin = function () { return origin; };
             obj._legacy = self.shallowCopy(this, {});
             /* Methods */
@@ -826,18 +830,18 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
             /* Import Scripts */
             for(i=0; i < args.length; i++) {
                 var obj = this.getNewObj('script');
-                obj.type = "text/javascript";
-                obj.src = args[i];
-                obj.onload = pFct;
+                obj.attr('type', 'text/javascript');
+                obj.attr('src', args[i]);
+                obj.on('load', pFct);
                 this.getObj('head').addChild(obj);
             }
         } else {
             /* Import Scripts */
             for(i=0; i < args.length; i++) {
                 var obj = this.getNewObj('script');
-                obj.type = "text/javascript";
-                obj.src = args[i];
-                if(fct) { obj.onload = fct; }
+                obj.attr('type', 'text/javascript');
+                obj.attr('src', args[i]);
+                if(fct) { obj.on('load', fct); }
                 this.getObj('head').addChild(obj);
             }
         }
@@ -861,20 +865,20 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
             /* Import Style */
             for(i=0; i < args.length; i++) {
                 var obj = this.getNewObj('link');
-                obj.rel = "stylesheet";
-                obj.type = "text/css";
-                obj.href = args[i];
-                obj.onload = pFct;
+                obj.attr('rel', 'stylesheet');
+                obj.attr('type', 'text/css');
+                obj.attr('href', args[i]);
+                obj.on('load', pFct);
                 this.getObj('head').addChild(obj);
             }
         } else {
             /* Import Style */
             for(i=0; i < args.length; i++) {
                 var obj = this.getNewObj('link');
-                obj.rel = "stylesheet";
-                obj.type = "text/css";
-                obj.href = args[i];
-                if(fct) { obj.onload = fct; }
+                obj.attr('rel', 'stylesheet');
+                obj.attr('type', 'text/css');
+                obj.attr('href', args[i]);
+                if(fct) { obj.on('load', fct); }
                 this.getObj('head').addChild(obj);
             }
         }
