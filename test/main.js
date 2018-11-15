@@ -18,6 +18,29 @@ if(['web','nextjs'].indexOf(yengin.mode) >= 0) {
     *	Web / Nextjs
     */
 
+    /* Debug Console */
+    var dbg = document.createElement('div');
+    document.querySelector('body').appendChild(dbg);
+    Object.entries({
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '100px',
+        backgroundColor: '#333',
+        color: '#FFF',
+        padding: '5px 15px',
+        overflow: 'auto'
+    }).map(function (keyValue) {
+        dbg.style[keyValue[0]] = keyValue[1];
+    });
+
+    var _consoleLog = console.log;
+    console.log = function (message) {
+        _consoleLog(message);
+        dbg.innerHTML += '<xmp>'+message+'</xmp><br/>';
+    };
+
     /* yengin.support */
     yengin.support();
     test[window.yg?'pass':'errors'].push('support:1');

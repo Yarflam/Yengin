@@ -619,11 +619,11 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                 var gen = function (attr) {
                     if(!attr.indexOf('on')) {
                         attr = attr.substr(2);
-                        // if(['select','scroll','search','submit','focus'].indexOf(attr) < 0) {
+                        if(['select','scroll','search','submit','focus'].indexOf(attr) < 0) {
                             obj[attr] = function (fct, useCapture) {
                                 obj.addEvent(attr, fct, useCapture);
                             }
-                        // }
+                        }
                     }
                 }; for(var attr in obj) { gen(attr); }
             }
