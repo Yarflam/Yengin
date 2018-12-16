@@ -401,11 +401,12 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                 var origin = this[id];
             } else { return this; }
             /* Fake Object */
-            var obj = [origin];
+            var obj = {}; //[origin];
+            obj[0] = origin;
             for(var props in origin) {
-                if(!(origin[props] instanceof Element || origin[props] instanceof HTMLDocument)) {
-                    obj[props] = origin[props];
-                }
+                // if(!(origin[props] instanceof Element || origin[props] instanceof HTMLDocument)) {
+                obj[props] = origin[props];
+                // }
             }
             obj._yengin = function () { return origin; };
             obj._legacy = self.shallowCopy(this, {});

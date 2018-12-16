@@ -21,7 +21,11 @@ if(['web','nextjs'].indexOf(yengin.mode) >= 0) {
     /* Debug Console */
     var dbg = document.createElement('div');
     document.querySelector('body').appendChild(dbg);
-    Object.entries({
+    (function (dbgCss) {
+        for(var prop in dbgCss) {
+            dbg.style[prop] = dbgCss[prop];
+        }
+    })({
         position: 'absolute',
         bottom: 0,
         left: 0,
@@ -31,8 +35,6 @@ if(['web','nextjs'].indexOf(yengin.mode) >= 0) {
         color: '#FFF',
         padding: '5px 15px',
         overflow: 'auto'
-    }).map(function (keyValue) {
-        dbg.style[keyValue[0]] = keyValue[1];
     });
 
     var _consoleLog = console.log;
