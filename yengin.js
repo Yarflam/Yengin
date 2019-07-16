@@ -378,6 +378,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
     *
     *	@call: eq(), css(), html(), append(), parent()
     */
+    priv._domIgnoreOnEvent = ['select','scroll','search','submit','focus','show'];
     self.getObj = function (selector, autoSelect, autoEvent) {
         /* AutoSelect Mode */
         var autoSelect = (self.isset(autoSelect) && !autoSelect ? false : true);
@@ -400,8 +401,13 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                 var origin = this[id];
             } else { return this; }
             /* Fake Object */
-            var obj = [origin];
-            for(var props in origin) { obj[props] = origin[props]; }
+            var obj = {}; //[origin];
+            obj[0] = origin;
+            for(var props in origin) {
+                // if(!(origin[props] instanceof Element || origin[props] instanceof HTMLDocument)) {
+                obj[props] = origin[props];
+                // }
+            }
             obj._yengin = function () { return origin; };
             obj._legacy = self.shallowCopy(this, {});
             /* Methods */
@@ -609,17 +615,19 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
             obj.height = function () { return origin.offsetHeight; }; // -- erreur Edge ? "Error: Argument non valide."
             obj.show = function () { return (this.attr('style', (this.attr('style')||'').replace(/display: ?none;?/i,'')), this); };
             obj.hide = function () { return (this.css('display','none'), this); };
+            obj.focus = function () { origin.focus(); };
+            obj.submit = function () { origin.submit(); }
             obj.eq = function () { return this; };
             /* Events heritage */
             if(autoEvent) {
                 var gen = function (attr) {
                     if(!attr.indexOf('on')) {
                         attr = attr.substr(2);
-                        // if(['select','scroll','search','submit','focus'].indexOf(attr) < 0) {
+                        if(priv._domIgnoreOnEvent.indexOf(attr) < 0) {
                             obj[attr] = function (fct, useCapture) {
                                 obj.addEvent(attr, fct, useCapture);
                             }
-                        // }
+                        }
                     }
                 }; for(var attr in obj) { gen(attr); }
             }
@@ -735,7 +743,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
                 var gen = function (attr) {
                     if(!attr.indexOf('on')) {
                         attr = attr.substr(2);
-                        if(['select','scroll','search','submit','focus'].indexOf(attr) < 0) {
+                        if(priv._domIgnoreOnEvent.indexOf(attr) < 0) {
                             obj[attr] = function (fct, useCapture) {
                                 obj.addEvent(attr, fct, useCapture);
                             }
@@ -826,18 +834,18 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
             /* Import Scripts */
             for(i=0; i < args.length; i++) {
                 var obj = this.getNewObj('script');
-                obj.type = "text/javascript";
-                obj.src = args[i];
-                obj.onload = pFct;
+                obj.attr('type', 'text/javascript');
+                obj.attr('src', args[i]);
+                obj.on('load', pFct);
                 this.getObj('head').addChild(obj);
             }
         } else {
             /* Import Scripts */
             for(i=0; i < args.length; i++) {
                 var obj = this.getNewObj('script');
-                obj.type = "text/javascript";
-                obj.src = args[i];
-                if(fct) { obj.onload = fct; }
+                obj.attr('type', 'text/javascript');
+                obj.attr('src', args[i]);
+                if(fct) { obj.on('load', fct); }
                 this.getObj('head').addChild(obj);
             }
         }
@@ -861,20 +869,20 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
             /* Import Style */
             for(i=0; i < args.length; i++) {
                 var obj = this.getNewObj('link');
-                obj.rel = "stylesheet";
-                obj.type = "text/css";
-                obj.href = args[i];
-                obj.onload = pFct;
+                obj.attr('rel', 'stylesheet');
+                obj.attr('type', 'text/css');
+                obj.attr('href', args[i]);
+                obj.on('load', pFct);
                 this.getObj('head').addChild(obj);
             }
         } else {
             /* Import Style */
             for(i=0; i < args.length; i++) {
                 var obj = this.getNewObj('link');
-                obj.rel = "stylesheet";
-                obj.type = "text/css";
-                obj.href = args[i];
-                if(fct) { obj.onload = fct; }
+                obj.attr('rel', 'stylesheet');
+                obj.attr('type', 'text/css');
+                obj.attr('href', args[i]);
+                if(fct) { obj.on('load', fct); }
                 this.getObj('head').addChild(obj);
             }
         }
@@ -1457,7 +1465,7 @@ var yengin = (function(o){return(o(o.toString()));})(function(_source){
         return (angle-180)/(180/Math.PI); };
     self.toAngle = function (angle) {
         return (angle*(180/Math.PI))+180; };
-    self.toCartesien = function (angle) {
+    self.toCartesian = function (angle) {
         var rad = self.toRadian(angle);
         return [Math.cos(rad), Math.sin(rad)]; };
     self.toPolaire = function (x, y) {
