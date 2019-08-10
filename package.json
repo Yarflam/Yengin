@@ -4,7 +4,6 @@
     "description": "HTML5/canvas JS Library",
     "main": "yengin.min.js",
     "scripts": {
-        "preinstall": "npm i gulp -g",
         "build": "gulp build",
         "lint": "./node_modules/eslint/bin/eslint.js --cache --fix ./test/main.js",
         "test": "echo \"Error: no test specified\" && exit 1"
