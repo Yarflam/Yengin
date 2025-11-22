@@ -35,11 +35,7 @@ export function quickSortArray(array, compareFn) {
         }
     }
 
-    return [
-        ...quickSortArray(left, compareFn),
-        pivot,
-        ...quickSortArray(right, compareFn)
-    ];
+    return [...quickSortArray(left, compareFn), pivot, ...quickSortArray(right, compareFn)];
 }
 
 /**

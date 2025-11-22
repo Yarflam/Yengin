@@ -64,10 +64,7 @@ export class Complex {
      */
     multiply(other, otherI = 0) {
         const b = other instanceof Complex ? other : new Complex(other, otherI);
-        return new Complex(
-            this.r * b.r - this.i * b.i,
-            this.r * b.i + this.i * b.r
-        );
+        return new Complex(this.r * b.r - this.i * b.i, this.r * b.i + this.i * b.r);
     }
 
     /**
@@ -161,9 +158,9 @@ export class Complex {
     getAngle() {
         const norm = this.getNorm();
         const rad = 180 / Math.PI;
-        const x = (Math.acos(norm.r) * rad) + 180;
-        const y = (Math.asin(norm.i) * rad) + 180;
-        return Math.floor(y) < 180 ? (x % 360) : (360 - x);
+        const x = Math.acos(norm.r) * rad + 180;
+        const y = Math.asin(norm.i) * rad + 180;
+        return Math.floor(y) < 180 ? x % 360 : 360 - x;
     }
 
     /**

@@ -44,10 +44,7 @@ export class Vector2D {
         if (length === 0) {
             return [0, 0];
         }
-        return [
-            (this.b[0] - this.a[0]) / length,
-            (this.b[1] - this.a[1]) / length
-        ];
+        return [(this.b[0] - this.a[0]) / length, (this.b[1] - this.a[1]) / length];
     }
 
     /**
@@ -91,10 +88,7 @@ export class Vector2D {
     multiply(scalar) {
         const dx = (this.b[0] - this.a[0]) * scalar;
         const dy = (this.b[1] - this.a[1]) * scalar;
-        return new Vector2D(
-            this.a,
-            [this.a[0] + dx, this.a[1] + dy]
-        );
+        return new Vector2D(this.a, [this.a[0] + dx, this.a[1] + dy]);
     }
 
     /**
@@ -126,7 +120,7 @@ export function toRadian(angle) {
  * @returns {number} Angle in degrees (0-360)
  */
 export function toAngle(radian) {
-    return (radian * (180 / Math.PI)) + 180;
+    return radian * (180 / Math.PI) + 180;
 }
 
 /**
@@ -148,5 +142,5 @@ export function toCartesian(angle) {
 export function toPolar(x, y) {
     const angleX = toAngle(Math.acos(x));
     const angleY = toAngle(Math.asin(y));
-    return Math.floor(angleY) >= 180 ? (angleX % 360) : (360 - angleX);
+    return Math.floor(angleY) >= 180 ? angleX % 360 : 360 - angleX;
 }

@@ -10,10 +10,13 @@
  * @returns {string} Hexadecimal color string
  */
 export function rgbToHex(rgb, includeHash = true) {
-    const hex = rgb.slice(0, 3).map((value) => {
-        const hexValue = value.toString(16).toUpperCase();
-        return hexValue.length === 2 ? hexValue : '0' + hexValue;
-    }).join('');
+    const hex = rgb
+        .slice(0, 3)
+        .map((value) => {
+            const hexValue = value.toString(16).toUpperCase();
+            return hexValue.length === 2 ? hexValue : '0' + hexValue;
+        })
+        .join('');
 
     return includeHash ? '#' + hex : hex;
 }

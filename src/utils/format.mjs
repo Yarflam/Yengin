@@ -57,7 +57,7 @@ export function b64decode(input) {
             continue;
         }
 
-        const shift = (6 - ((i % 4) * 2)) % 6;
+        const shift = (6 - (i % 4) * 2) % 6;
 
         if (i % 4) {
             output += String.fromCharCode(remainder + (charCode >> shift));
@@ -85,7 +85,8 @@ export function toHex(num) {
  * @returns {Object|null} URL components or null
  */
 export function decodeUrl(url) {
-    const regex = /^((([A-Za-z]+):)?\/\/((([^:.]+)\.){0,2})([^:/]+)(:([0-9]+))?(\/([^/?.]+\/)*))([^?]+)?(\?([^#]+))?(#.+)?$/;
+    const regex =
+        /^((([A-Za-z]+):)?\/\/((([^:.]+)\.){0,2})([^:/]+)(:([0-9]+))?(\/([^/?.]+\/)*))([^?]+)?(\?([^#]+))?(#.+)?$/;
     const match = url.match(regex);
     return match ? match[1] : null;
 }

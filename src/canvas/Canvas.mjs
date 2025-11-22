@@ -138,10 +138,16 @@ export class Canvas {
      */
     drawCircle(options) {
         const {
-            x, y, radius, color = '#000',
-            border = 0, borderColor = '#000',
-            shadow = 0, shadowColor = '#000',
-            startAngle = 0, endAngle = 2 * Math.PI,
+            x,
+            y,
+            radius,
+            color = '#000',
+            border = 0,
+            borderColor = '#000',
+            shadow = 0,
+            shadowColor = '#000',
+            startAngle = 0,
+            endAngle = 2 * Math.PI,
             fill = true
         } = options;
 
@@ -179,9 +185,13 @@ export class Canvas {
      */
     drawRect(options) {
         const {
-            x, y, width, height,
+            x,
+            y,
+            width,
+            height,
             color = '#000',
-            border = 0, borderColor = '#000',
+            border = 0,
+            borderColor = '#000',
             fill = true
         } = options;
 
@@ -209,10 +219,14 @@ export class Canvas {
      */
     drawRoundRect(options) {
         const {
-            x, y, width, height,
+            x,
+            y,
+            width,
+            height,
             radius = 0,
             color = '#000',
-            border = 0, borderColor = '#000',
+            border = 0,
+            borderColor = '#000',
             fill = true
         } = options;
 
@@ -251,7 +265,8 @@ export class Canvas {
         const {
             points = [],
             color = '#000',
-            border = 0, borderColor = '#000',
+            border = 0,
+            borderColor = '#000',
             fill = true
         } = options;
 
@@ -287,7 +302,9 @@ export class Canvas {
      */
     drawText(options) {
         const {
-            x, y, text,
+            x,
+            y,
+            text,
             font = '12pt Arial',
             color = '#000',
             align = 'left',
@@ -309,9 +326,7 @@ export class Canvas {
      * @returns {Canvas} This canvas for chaining
      */
     drawPixel(options) {
-        const {
-            x, y, color = '#000', size = 1
-        } = options;
+        const { x, y, color = '#000', size = 1 } = options;
 
         this.ctx.fillStyle = color;
         this.ctx.fillRect(x, y, size, size);

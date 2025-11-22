@@ -9,13 +9,7 @@
  * @returns {Promise} Fetch promise
  */
 export async function request(options) {
-    const {
-        url,
-        method = 'GET',
-        data = null,
-        headers = {},
-        responseType = 'json'
-    } = options;
+    const { url, method = 'GET', data = null, headers = {}, responseType = 'json' } = options;
 
     const fetchOptions = {
         method: method.toUpperCase(),

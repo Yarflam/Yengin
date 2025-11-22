@@ -13,21 +13,16 @@ export function rgbToCmyk(rgb) {
         return [0, 0, 0, 100];
     }
 
-    let c = 1 - (rgb[0] / 255);
-    let m = 1 - (rgb[1] / 255);
-    let y = 1 - (rgb[2] / 255);
+    let c = 1 - rgb[0] / 255;
+    let m = 1 - rgb[1] / 255;
+    let y = 1 - rgb[2] / 255;
     const k = Math.min(c, m, y);
 
     c = (c - k) / (1 - k);
     m = (m - k) / (1 - k);
     y = (y - k) / (1 - k);
 
-    return [
-        Math.round(c * 100),
-        Math.round(m * 100),
-        Math.round(y * 100),
-        Math.round(k * 100)
-    ];
+    return [Math.round(c * 100), Math.round(m * 100), Math.round(y * 100), Math.round(k * 100)];
 }
 
 /**
@@ -45,9 +40,5 @@ export function cmykToRgb(cmyk) {
     const g = 1 - Math.min(1, m * (1 - k) + k);
     const b = 1 - Math.min(1, y * (1 - k) + k);
 
-    return [
-        Math.round(r * 255),
-        Math.round(g * 255),
-        Math.round(b * 255)
-    ];
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 }
