@@ -191,14 +191,17 @@ export class Quaternion {
     getNorm(other, i = 0, j = 0, k = 0) {
         const q = other instanceof Quaternion ? other : new Quaternion(other, i, j, k);
         const dist = this.distance(q);
-        return dist
-            ? new Quaternion(
-                (this.w - q.w) / dist,
-                (this.i - q.i) / dist,
-                (this.j - q.j) / dist,
-                (this.k - q.k) / dist
-            )
-            : new Quaternion();
+
+        if (!dist) {
+            return new Quaternion();
+        }
+
+        return new Quaternion(
+            (this.w - q.w) / dist,
+            (this.i - q.i) / dist,
+            (this.j - q.j) / dist,
+            (this.k - q.k) / dist
+        );
     }
 
     /**
