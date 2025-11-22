@@ -10,6 +10,6 @@ export default {
         '!src/index.mjs'
     ],
     coverageDirectory: 'coverage',
-    coverageReporters: ['text', 'lcov', 'html'],
+    coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
     verbose: true
 };
