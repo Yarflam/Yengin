@@ -1,9 +1,22 @@
 {
     "name": "yengin",
     "version": "3.0.0",
-    "description": "JS Libs/Components",
-    "main": "yengin.min.js",
+    "description": "Modern JavaScript library for Canvas, Math, Colors, and utilities - compatible with React, Vue, Angular",
+    "main": "src/index.mjs",
+    "type": "module",
+    "exports": {
+        ".": "./src/index.mjs",
+        "./utils": "./src/utils/index.mjs",
+        "./math": "./src/math/index.mjs",
+        "./color": "./src/color/index.mjs",
+        "./canvas": "./src/canvas/index.mjs",
+        "./storage": "./src/storage/index.mjs",
+        "./http": "./src/http/index.mjs"
+    },
     "scripts": {
+        "lint": "eslint src/**/*.mjs",
+        "lint:fix": "eslint src/**/*.mjs --fix",
+        "format": "prettier --write \"src/**/*.mjs\"",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
@@ -11,10 +24,19 @@
         "url": "git+https://github.com/Yarflam/Yengin.git"
     },
     "keywords": [
-        "js",
-        "next",
-        "components",
-        "libraries"
+        "canvas",
+        "math",
+        "vector",
+        "complex",
+        "quaternion",
+        "color",
+        "utilities",
+        "react",
+        "vue",
+        "angular",
+        "framework-agnostic",
+        "es6",
+        "modules"
     ],
     "author": "Yarflam",
     "license": "ISC",
@@ -25,5 +47,8 @@
     "devDependencies": {
         "eslint": "^8.23.0",
         "prettier": "^2.7.1"
+    },
+    "engines": {
+        "node": ">=14.0.0"
     }
 }
