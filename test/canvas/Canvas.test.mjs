@@ -3,6 +3,7 @@
  * Note: These tests use JSDOM for canvas support
  */
 
+import { jest } from '@jest/globals';
 import { Canvas } from '../../src/canvas/Canvas.mjs';
 
 // Mock canvas element for testing

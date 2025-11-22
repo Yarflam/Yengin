@@ -79,6 +79,10 @@ export function formatStr(str, values) {
     return str.replace(regex, (match, p1, p2) => {
         if (p2 !== undefined && p2.length > 0) {
             const index = parseInt(p2);
+            // Update nchar to skip explicitly indexed positions
+            if (index >= nchar) {
+                nchar = index + 1;
+            }
             return index < values.length ? values[index] : '';
         } else if (!p2 || p2.length === 0) {
             if (nchar < values.length) {

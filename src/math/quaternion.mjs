@@ -26,7 +26,9 @@ export class Quaternion {
      * @returns {string} String representation
      */
     toString() {
-        return `${this.w}${this.i >= 0 ? ' + ' : ' - '}${Math.abs(this.i)}i${this.j >= 0 ? ' + ' : ' - '}${Math.abs(this.j)}j${this.k >= 0 ? ' + ' : ' - '}${Math.abs(this.k)}k`;
+        return `${this.w}${this.i >= 0 ? ' + ' : ' - '}${Math.abs(this.i)}i${
+            this.j >= 0 ? ' + ' : ' - '
+        }${Math.abs(this.j)}j${this.k >= 0 ? ' + ' : ' - '}${Math.abs(this.k)}k`;
     }
 
     /**
@@ -39,12 +41,7 @@ export class Quaternion {
      */
     add(other, i = 0, j = 0, k = 0) {
         const q = other instanceof Quaternion ? other : new Quaternion(other, i, j, k);
-        return new Quaternion(
-            this.w + q.w,
-            this.i + q.i,
-            this.j + q.j,
-            this.k + q.k
-        );
+        return new Quaternion(this.w + q.w, this.i + q.i, this.j + q.j, this.k + q.k);
     }
 
     /**
@@ -57,12 +54,7 @@ export class Quaternion {
      */
     subtract(other, i = 0, j = 0, k = 0) {
         const q = other instanceof Quaternion ? other : new Quaternion(other, i, j, k);
-        return new Quaternion(
-            this.w - q.w,
-            this.i - q.i,
-            this.j - q.j,
-            this.k - q.k
-        );
+        return new Quaternion(this.w - q.w, this.i - q.i, this.j - q.j, this.k - q.k);
     }
 
     /**
@@ -118,10 +110,22 @@ export class Quaternion {
         }
 
         return new Quaternion(
-            Math.pow(this.w, exponent - 1) - Math.pow(this.i, exponent - 1) - Math.pow(this.j, exponent - 1) - Math.pow(this.k, exponent - 1),
-            this.i * Math.pow(this.w, exponent - 2) + this.w * Math.pow(this.i, exponent - 2) + this.k * Math.pow(this.j, exponent - 2) - this.j * Math.pow(this.k, exponent - 2),
-            this.j * Math.pow(this.w, exponent - 2) - this.k * Math.pow(this.i, exponent - 2) + this.w * Math.pow(this.j, exponent - 2) + this.i * Math.pow(this.k, exponent - 2),
-            this.k * Math.pow(this.w, exponent - 2) + this.j * Math.pow(this.i, exponent - 2) - this.i * Math.pow(this.j, exponent - 2) + this.w * Math.pow(this.k, exponent - 2)
+            Math.pow(this.w, exponent - 1) -
+                Math.pow(this.i, exponent - 1) -
+                Math.pow(this.j, exponent - 1) -
+                Math.pow(this.k, exponent - 1),
+            this.i * Math.pow(this.w, exponent - 2) +
+                this.w * Math.pow(this.i, exponent - 2) +
+                this.k * Math.pow(this.j, exponent - 2) -
+                this.j * Math.pow(this.k, exponent - 2),
+            this.j * Math.pow(this.w, exponent - 2) -
+                this.k * Math.pow(this.i, exponent - 2) +
+                this.w * Math.pow(this.j, exponent - 2) +
+                this.i * Math.pow(this.k, exponent - 2),
+            this.k * Math.pow(this.w, exponent - 2) +
+                this.j * Math.pow(this.i, exponent - 2) -
+                this.i * Math.pow(this.j, exponent - 2) +
+                this.w * Math.pow(this.k, exponent - 2)
         );
     }
 
@@ -139,12 +143,7 @@ export class Quaternion {
                 this.k % other.k
             );
         }
-        return new Quaternion(
-            this.w % other,
-            this.i % other,
-            this.j % other,
-            this.k % other
-        );
+        return new Quaternion(this.w % other, this.i % other, this.j % other, this.k % other);
     }
 
     /**
@@ -175,9 +174,9 @@ export class Quaternion {
         const q = other instanceof Quaternion ? other : new Quaternion(other, i, j, k);
         return Math.sqrt(
             Math.pow(q.w - this.w, 2) +
-            Math.pow(q.i - this.i, 2) +
-            Math.pow(q.j - this.j, 2) +
-            Math.pow(q.k - this.k, 2)
+                Math.pow(q.i - this.i, 2) +
+                Math.pow(q.j - this.j, 2) +
+                Math.pow(q.k - this.k, 2)
         );
     }
 
@@ -192,12 +191,14 @@ export class Quaternion {
     getNorm(other, i = 0, j = 0, k = 0) {
         const q = other instanceof Quaternion ? other : new Quaternion(other, i, j, k);
         const dist = this.distance(q);
-        return dist ? new Quaternion(
-            (this.w - q.w) / dist,
-            (this.i - q.i) / dist,
-            (this.j - q.j) / dist,
-            (this.k - q.k) / dist
-        ) : new Quaternion();
+        return dist
+            ? new Quaternion(
+                (this.w - q.w) / dist,
+                (this.i - q.i) / dist,
+                (this.j - q.j) / dist,
+                (this.k - q.k) / dist
+            )
+            : new Quaternion();
     }
 
     /**
@@ -208,30 +209,26 @@ export class Quaternion {
         const rad = 180 / Math.PI;
 
         // Calculate components
-        const aRoll = (2 * this.i * this.w) - (2 * this.j * this.k);
-        const bRoll = 1 - (2 * this.i * this.i) - (2 * this.k * this.k);
-        const aPitch = (2 * this.j * this.w) - (2 * this.i * this.k);
-        const bPitch = 1 - (2 * this.j * this.j) - (2 * this.k * this.k);
-        const aYaw = (this.i * this.j) + (this.k * this.w);
-        const bYaw = (this.w * this.w) + (this.i * this.i) + (this.j * this.j) + (this.k * this.k);
+        const aRoll = 2 * this.i * this.w - 2 * this.j * this.k;
+        const bRoll = 1 - 2 * this.i * this.i - 2 * this.k * this.k;
+        const aPitch = 2 * this.j * this.w - 2 * this.i * this.k;
+        const bPitch = 1 - 2 * this.j * this.j - 2 * this.k * this.k;
+        const aYaw = this.i * this.j + this.k * this.w;
+        const bYaw = this.w * this.w + this.i * this.i + this.j * this.j + this.k * this.k;
 
         // Calculate Euler angles
         let roll = Math.atan2(aRoll, bRoll);
         let pitch = Math.atan2(aPitch, bPitch);
-        let yaw = Math.asin(2 * aYaw / (bYaw || 1));
+        let yaw = Math.asin((2 * aYaw) / (bYaw || 1));
 
         // Handle gimbal lock
         if (aYaw >= 0.5 || aYaw <= -0.5) {
             roll = 0;
-            yaw = (aYaw ? 1 : -1) * Math.PI / 2;
+            yaw = ((aYaw ? 1 : -1) * Math.PI) / 2;
             pitch = 2 * (aYaw ? 1 : -1) * Math.atan2(this.i, this.w);
         }
 
-        return [
-            ((roll * rad) + 180) % 360,
-            ((pitch * rad) + 180) % 360,
-            ((yaw * rad) + 180) % 360
-        ];
+        return [(roll * rad + 180) % 360, (pitch * rad + 180) % 360, (yaw * rad + 180) % 360];
     }
 
     /**
@@ -258,10 +255,10 @@ export class Quaternion {
         const sYaw = Math.sin(yaw / 2);
 
         return new Quaternion(
-            (cRoll * cPitch * cYaw) - (sRoll * sPitch * sYaw),
-            (cRoll * sPitch * sYaw) + (sRoll * cPitch * cYaw),
-            (cRoll * sPitch * cYaw) + (sRoll * cPitch * sYaw),
-            (cRoll * cPitch * sYaw) - (sRoll * sPitch * cYaw)
+            cRoll * cPitch * cYaw - sRoll * sPitch * sYaw,
+            cRoll * sPitch * sYaw + sRoll * cPitch * cYaw,
+            cRoll * sPitch * cYaw + sRoll * cPitch * sYaw,
+            cRoll * cPitch * sYaw - sRoll * sPitch * cYaw
         );
     }
 }
