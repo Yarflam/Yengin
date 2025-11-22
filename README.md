@@ -1,7 +1,7 @@
 # Yengin v3
 
-[![CI](https://github.com/Yarflam/Yengin/workflows/CI/badge.svg)](https://github.com/Yarflam/Yengin/actions/workflows/ci.yml)
-[![Coverage](https://github.com/Yarflam/Yengin/workflows/Coverage/badge.svg)](https://github.com/Yarflam/Yengin/actions/workflows/coverage.yml)
+[![CI](https://github.com/Yarflam/Yengin/actions/workflows/ci.yml/badge.svg)](https://github.com/Yarflam/Yengin/actions/workflows/ci.yml)
+[![Coverage](https://github.com/Yarflam/Yengin/actions/workflows/coverage.yml/badge.svg)](https://github.com/Yarflam/Yengin/actions/workflows/coverage.yml)
 [![npm version](https://badge.fury.io/js/yengin.svg)](https://www.npmjs.com/package/yengin)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 
