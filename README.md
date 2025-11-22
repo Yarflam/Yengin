@@ -1,5 +1,10 @@
 # Yengin v3
 
+[![CI](https://github.com/Yarflam/Yengin/workflows/CI/badge.svg)](https://github.com/Yarflam/Yengin/actions/workflows/ci.yml)
+[![Coverage](https://github.com/Yarflam/Yengin/workflows/Coverage/badge.svg)](https://github.com/Yarflam/Yengin/actions/workflows/coverage.yml)
+[![npm version](https://badge.fury.io/js/yengin.svg)](https://www.npmjs.com/package/yengin)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+
 Modern JavaScript library for Canvas rendering, mathematical operations, color conversions, and utility functions. Built with ES6+ modules for seamless integration with React, Vue.js, Angular, and vanilla JavaScript.
 
 ## Features
