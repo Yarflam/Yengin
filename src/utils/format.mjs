@@ -13,7 +13,6 @@ const B64_ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678
 export function b64encode(input) {
     let output = '';
     let remainder = 0;
-    let charIndex = 0;
 
     for (let i = 0; ; i++) {
         const charCode = i < input.length ? input.charCodeAt(i) : 0;

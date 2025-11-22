@@ -33,27 +33,23 @@ export async function request(options) {
         }
     }
 
-    try {
-        const response = await fetch(url, fetchOptions);
+    const response = await fetch(url, fetchOptions);
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
 
-        switch (responseType) {
-            case 'json':
-                return await response.json();
-            case 'text':
-                return await response.text();
-            case 'blob':
-                return await response.blob();
-            case 'arrayBuffer':
-                return await response.arrayBuffer();
-            default:
-                return response;
-        }
-    } catch (error) {
-        throw error;
+    switch (responseType) {
+        case 'json':
+            return await response.json();
+        case 'text':
+            return await response.text();
+        case 'blob':
+            return await response.blob();
+        case 'arrayBuffer':
+            return await response.arrayBuffer();
+        default:
+            return response;
     }
 }
 
